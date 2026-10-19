@@ -187,7 +187,8 @@ function renderResults() {
   const interpreted = interpret(scan.text, scan.format);
   const fields = extractScanFields(scan);
   const selected = sheets.selectedFields(fields);
-  const shown = Object.keys(sheets.mapping).length ? selected : fields;
+  const mapped = Object.keys(sheets.mapping).length > 0;
+  const shown = mapped ? selected : fields;
   const result = el("div", "result-content");
   const top = el("div", "result-top");
   top.append(el("span", "result-status", "●  DECODED SUCCESSFULLY"), el("span", "result-index", `${String(scans.length).padStart(2, "0")} IN SESSION`));
@@ -222,7 +223,7 @@ function renderResults() {
   if (scan.confidence !== null) table.append(detailRow("Confidence", `${Math.round(scan.confidence)}%`));
   if (scan.angle !== null) table.append(detailRow("Rotation", `${Math.round(scan.angle)}°`));
   const typedHeading = el("div", "typed-heading");
-  typedHeading.append(el("h3", "", Object.keys(sheets.mapping).length ? "Selected fields" : "Detected fields"), el("span", "", Object.keys(sheets.mapping).length ? `${selected.length} matching this scan` : `${fields.length} fields found`));
+  typedHeading.append(el("h3", "", mapped ? "Selected fields" : "Detected fields"), el("span", "", mapped ? `${selected.length} matching this scan` : `${fields.length} fields found`));
   const typedList = el("div", "typed-list");
   if (!shown.length) typedList.append(el("p", "empty-note", "This barcode contains none of the mapped fields."));
   for (const field of shown) {
@@ -232,8 +233,8 @@ function renderResults() {
     row.append(name, el("span", "type-pill", field.type), el("span", "typed-value", field.value || "—"));
     typedList.append(row);
   }
-  const allButton = el("button", "text-button show-all-fields", Object.keys(sheets.mapping).length ? "Show every detected field" : "");
-  if (Object.keys(sheets.mapping).length) {
+  const allButton = el("button", "text-button show-all-fields", "Show full scan");
+  if (mapped) {
     allButton.type = "button";
     allButton.addEventListener("click", () => {
       typedList.replaceChildren(...fields.map((field) => {
@@ -243,12 +244,17 @@ function renderResults() {
         row.append(name, el("span", "type-pill", field.type), el("span", "typed-value", field.value || "—"));
         return row;
       }));
+      result.insertBefore(payloadBlock, typedHeading);
+      result.insertBefore(actions, typedHeading);
+      result.append(el("h3", "details-heading", "Code details"), table);
       allButton.remove();
     });
   }
-  result.append(top, format, payloadBlock, actions, typedHeading, typedList);
-  if (Object.keys(sheets.mapping).length) result.append(allButton);
-  result.append(el("h3", "details-heading", "Code details"), table);
+  result.append(top, format);
+  if (!mapped) result.append(payloadBlock, actions);
+  result.append(typedHeading, typedList);
+  if (mapped) result.append(allButton);
+  else result.append(el("h3", "details-heading", "Code details"), table);
   elements.resultArea.replaceChildren(result);
   if (window.gsap && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
     window.gsap.fromTo(result, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" });

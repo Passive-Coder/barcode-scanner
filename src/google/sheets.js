@@ -103,6 +103,10 @@ export class SheetsClient {
     return this.batchUpdate(id, [{ deleteDimension: { range: { sheetId, dimension: "COLUMNS", startIndex: index, endIndex: index + 1 } } }]);
   }
 
+  appendColumn(id, sheetId) {
+    return this.batchUpdate(id, [{ appendDimension: { sheetId, dimension: "COLUMNS", length: 1 } }]);
+  }
+
   deleteRow(id, sheetId, row) {
     return this.batchUpdate(id, [{ deleteDimension: { range: { sheetId, dimension: "ROWS", startIndex: row - 1, endIndex: row } } }]);
   }

@@ -47,9 +47,8 @@ export class SheetsWorkspace {
   get mapKey() { return this.sheet && this.activeId ? `${this.activeId}:${this.sheet.properties.sheetId}` : ""; }
   get mapping() { return this.mappings[this.mapKey] || {}; }
   get columns() {
-    const header = this.rows[0] || [];
     const mapped = Object.keys(this.mapping).map(Number);
-    return Math.max(header.length, mapped.length ? Math.max(...mapped) + 1 : 0);
+    return Math.max(0, ...this.rows.map((row) => row.length), mapped.length ? Math.max(...mapped) + 1 : 0);
   }
 
   updateClientId(value) {
@@ -101,6 +100,11 @@ export class SheetsWorkspace {
     this.activeId = id;
     localStorage.setItem(ACTIVE_KEY, id);
     this.metadata = metadata;
+    const linked = this.links.find((link) => link.id === id);
+    if (linked && linked.title !== metadata.properties?.title) {
+      linked.title = metadata.properties?.title || id;
+      localStorage.setItem(LINKS_KEY, JSON.stringify(this.links));
+    }
     this.sheet = sheets.find((item) => String(item.properties.sheetId) === String(preferredSheetId ?? this.sheet?.properties.sheetId)) || sheets[0] || null;
     await this.loadValues();
     this.render();
@@ -174,8 +178,13 @@ export class SheetsWorkspace {
       this.onToast("Tab deleted");
     }, "Could not delete tab"));
     $("#add-column").addEventListener("click", () => this.editText("Add a column", "Column heading", "", async (value) => {
-      await this.api.updateCell(this.activeId, this.sheet.properties.title, 1, this.columns, value);
-      await this.loadValues(); this.render(); this.onToast("Column added");
+      const index = this.columns;
+      if (index >= this.sheet.properties.gridProperties.columnCount) {
+        await this.api.appendColumn(this.activeId, this.sheet.properties.sheetId);
+      }
+      await this.api.updateCell(this.activeId, this.sheet.properties.title, 1, index, value);
+      await this.loadDocument(this.activeId, this.sheet.properties.sheetId);
+      this.onToast("Column added");
     }));
     $("#column-mappings").addEventListener("change", (event) => {
       if (!event.target.matches("select[data-column]")) return;
