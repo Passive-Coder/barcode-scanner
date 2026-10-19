@@ -12,16 +12,16 @@ python3 -m http.server 8000
 
 Then visit [http://localhost:8000](http://localhost:8000). Camera access requires localhost or HTTPS. Image scanning works without a camera. The scanner SDK's runtime assets are included under `vendor/dynamsoft` and must be served along with the app.
 
-## Deploy to Cloudflare Pages
+## Deploy to Cloudflare Workers
 
-Prepare a clean static output directory and upload it with Wrangler:
+Prepare a clean static output directory and deploy it as a Cloudflare Worker with static assets:
 
 ```sh
 node scripts/build.mjs
-npx wrangler pages deploy dist --project-name=<your-pages-project>
+npx wrangler deploy
 ```
 
-The build copies only the app shell, source, and required Dynamsoft distribution files. `dist/` is generated and ignored by Git. For Cloudflare Pages Git integration, set the build command to `node scripts/build.mjs` and the output directory to `dist`.
+The build copies only the app shell, source, and required Dynamsoft distribution files. `dist/` is generated and ignored by Git. The deployment settings are in `wrangler.toml`.
 
 ## License
 
