@@ -7,14 +7,18 @@ import {
   LicenseManager,
   MultiFrameResultCrossFilter,
 } from "../vendor/dynamsoft/dist/dbr.bundle.mjs";
+import { NativeScanner } from "./native-scanner.js";
 
 // The runtime files stay beside the exact SDK build supplied with this project.
 CoreModule.engineResourcePaths.dbrBundle = new URL("../vendor/dynamsoft/dist/", import.meta.url).href;
 
-// Sample key from the supplied SDK's own examples. Replace in Settings if it expires.
-export const SAMPLE_LICENSE = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMTA2NDc4ODM4LU1UQTJORGM0T0RNNExYZGxZaTFVY21saGJGQnliMm8iLCJtYWluU2VydmVyVVJMIjoiaHR0cHM6Ly9tZGxzLmR5bmFtc29mdG9ubGluZS5jb20vIiwib3JnYW5pemF0aW9uSUQiOiIxMDY0Nzg4MzgiLCJzdGFuZGJ5U2VydmVyVVJMIjoiaHR0cHM6Ly9zZGxzLmR5bmFtc29mdG9ubGluZS5jb20vIiwiY2hlY2tDb2RlIjotMjQ1NTYxODg3fQ==";
-
-LicenseManager.initLicense(localStorage.getItem("linework-license") || SAMPLE_LICENSE);
+// Dynamsoft's public evaluation key is valid for 24 hours per new browser.
+export const PUBLIC_TEST_LICENSE = "DLS2eyJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSJ9";
+export const hasLicense = () => Boolean(localStorage.getItem("linework-license") || PUBLIC_TEST_LICENSE);
+const license = localStorage.getItem("linework-license") || PUBLIC_TEST_LICENSE;
+const licenseReady = Promise.resolve().then(() => LicenseManager.initLicense(license));
+// Surface authorization errors through camera/image actions instead of an unhandled promise.
+licenseReady.catch(() => {});
 
 function normalize(item, source) {
   return {
@@ -38,6 +42,9 @@ export class BarcodeScanner {
     this.view = null;
     this.active = false;
     this.initializing = null;
+    this.native = new NativeScanner({ cameraContainer, onResults });
+    this.engine = "dynamsoft";
+    this.fallback = false;
   }
 
   async initializeCamera() {
@@ -76,28 +83,53 @@ export class BarcodeScanner {
   }
 
   async start() {
-    await this.initializeCamera();
-    await this.camera.open();
-    this.view.setScanLaserVisible(false);
-    await this.router.startCapturing("ReadBarcodes_SpeedFirst");
+    if (this.fallback) return this.startNative();
+    try {
+      await licenseReady;
+      await this.initializeCamera();
+      await this.camera.open();
+      this.view.setScanLaserVisible(false);
+      await this.router.startCapturing("ReadBarcodes_SpeedFirst");
+      this.active = true;
+      this.engine = "dynamsoft";
+      return this.camera.getAllCameras();
+    } catch (error) {
+      if (!NativeScanner.supported || /NotAllowedError|Permission denied/i.test(String(error))) throw error;
+      console.warn("Dynamsoft scanner unavailable; using browser scanner", error);
+      this.router?.dispose();
+      this.camera?.dispose();
+      this.router = null;
+      this.camera = null;
+      this.fallback = true;
+      return this.startNative();
+    }
+  }
+
+  async startNative() {
+    const cameras = await this.native.start();
     this.active = true;
-    return this.camera.getAllCameras();
+    this.engine = "browser";
+    return cameras;
   }
 
   async stop() {
     this.active = false;
+    if (this.engine === "browser") return this.native.stop();
     this.router?.stopCapturing();
     if (this.camera?.isOpen()) await this.camera.close();
   }
 
   async selectCamera(deviceId) {
+    if (this.engine === "browser") return this.native.selectCamera(deviceId);
     await this.camera.selectCamera(deviceId);
   }
 
-  get torchSupported() { return Boolean(this.camera?.isSupportTorch); }
-  get torchOn() { return Boolean(this.camera?.isTorchOn); }
+  get selectedCamera() { return this.engine === "browser" ? null : this.camera?.getSelectedCamera(); }
+  get torchSupported() { return this.engine === "browser" ? this.native.torchSupported : Boolean(this.camera?.isSupportTorch); }
+  get torchOn() { return this.engine === "browser" ? this.native.torchOn : Boolean(this.camera?.isTorchOn); }
 
   async toggleTorch() {
+    if (this.engine === "browser") return this.native.toggleTorch();
     if (!this.torchSupported) return false;
     if (this.torchOn) await this.camera.turnOffTorch();
     else await this.camera.turnOnTorch();
@@ -105,15 +137,23 @@ export class BarcodeScanner {
   }
 
   async scanImage(file) {
-    // A separate router keeps image decoding independent of the live camera.
-    const router = await CaptureVisionRouter.createInstance();
     try {
-      const result = await router.capture(file, "ReadBarcodes_ReadRateFirst");
-      return result.items
-        .filter((item) => item.type === EnumCapturedResultItemType.CRIT_BARCODE)
-        .map((item) => normalize(item, file.name));
-    } finally {
-      router.dispose();
+      await licenseReady;
+      // A separate router keeps image decoding independent of the live camera.
+      const router = await CaptureVisionRouter.createInstance();
+      try {
+        const result = await router.capture(file, "ReadBarcodes_ReadRateFirst");
+        return result.items
+          .filter((item) => item.type === EnumCapturedResultItemType.CRIT_BARCODE)
+          .map((item) => normalize(item, file.name));
+      } finally {
+        router.dispose();
+      }
+    } catch (error) {
+      if (!NativeScanner.supported) throw error;
+      console.warn("Dynamsoft image decode unavailable; using browser scanner", error);
+      this.fallback = true;
+      return this.native.scanImage(file);
     }
   }
 
@@ -121,5 +161,6 @@ export class BarcodeScanner {
     this.active = false;
     this.router?.dispose();
     this.camera?.dispose();
+    this.native.dispose();
   }
 }

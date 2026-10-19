@@ -1,4 +1,4 @@
-import { BarcodeScanner, SAMPLE_LICENSE } from "./scanner.js";
+import { BarcodeScanner, PUBLIC_TEST_LICENSE } from "./scanner.js";
 import { interpret } from "./interpret.js";
 
 const $ = (selector) => document.querySelector(selector);
@@ -62,6 +62,11 @@ function setMode(mode) {
   if (!camera && scanner.active) stopCamera();
 }
 
+function openSettings() {
+  elements.licenseInput.value = localStorage.getItem("linework-license") || PUBLIC_TEST_LICENSE;
+  elements.settingsDialog.showModal();
+}
+
 function setCameraUI() {
   const live = scanner.active;
   elements.cameraFrame.classList.toggle("is-live", live);
@@ -84,14 +89,20 @@ async function startCamera() {
   try {
     if (!window.isSecureContext) throw new Error("Camera access needs localhost or HTTPS.");
     const cameras = await scanner.start();
-    elements.captureHint.textContent = "Hold a barcode inside the frame. Results appear automatically.";
+    if (elements.cameraPanel.hidden) {
+      await scanner.stop();
+      return;
+    }
+    elements.captureHint.textContent = scanner.engine === "browser"
+      ? "Using this browser’s barcode reader. Add a Dynamsoft key in Settings for full format support."
+      : "Hold a barcode inside the frame. Results appear automatically.";
     elements.cameraSelect.replaceChildren(...cameras.map((camera) => {
       const option = el("option", "", camera.label || "Camera");
       option.value = camera.deviceId;
       return option;
     }));
     elements.cameraSelect.hidden = cameras.length < 2;
-    const selected = scanner.camera.getSelectedCamera();
+    const selected = scanner.selectedCamera;
     if (selected) elements.cameraSelect.value = selected.deviceId;
   } catch (error) {
     reportError(error, "Could not start camera");
@@ -124,7 +135,7 @@ function addResults(items) {
   const now = Date.now();
   let added = 0;
   for (const item of items) {
-    const duplicate = scans.find((scan) => scan.source === "Camera" && item.source === "Camera" && scan.format === item.format && scan.text === item.text && now - scan.time.getTime() < 6000);
+    const duplicate = scans.find((scan) => scan.source.startsWith("Camera") && item.source.startsWith("Camera") && scan.format === item.format && scan.text === item.text && now - scan.time.getTime() < 6000);
     if (duplicate) continue;
     scans.unshift(item);
     selectedId = item.id;
@@ -219,7 +230,10 @@ async function scanFile(file) {
   elements.dropZone.querySelector("strong").textContent = "Reading image…";
   try {
     const results = await scanner.scanImage(file);
-    if (results.length) addResults(results);
+    if (results.length) {
+      addResults(results);
+      if (results[0].source.includes("browser")) elements.imagePanel.querySelector(".capture-hint").textContent = "Using this browser’s barcode reader. Add a Dynamsoft key in Settings for full format support.";
+    }
     else showToast("No barcode found in this image. Try a clearer photo.");
   } catch (error) { reportError(error, "Could not read image"); }
   finally {
@@ -250,10 +264,7 @@ elements.dropZone.addEventListener("drop", (event) => {
   scanFile(event.dataTransfer.files?.[0]);
 });
 elements.clearButton.addEventListener("click", () => { scans.length = 0; selectedId = null; renderResults(); showToast("Session history cleared"); });
-$("#settings-button").addEventListener("click", () => {
-  elements.licenseInput.value = localStorage.getItem("linework-license") || SAMPLE_LICENSE;
-  elements.settingsDialog.showModal();
-});
+$("#settings-button").addEventListener("click", openSettings);
 $("#save-license").addEventListener("click", () => {
   const key = elements.licenseInput.value.trim();
   if (!key) { showToast("Enter a license key first"); return; }
