@@ -61,7 +61,13 @@ export class GoogleAuth {
           }
           finish(resolve, result);
         },
-        error_callback: (error) => finish(reject, new Error(error?.message || error?.type || "Google sign-in failed.")),
+        error_callback: (error) => {
+          const reason = error?.message || error?.type || "Google sign-in failed.";
+          const message = /popup.*closed/i.test(reason)
+            ? "Google sign-in window closed. If it closed immediately, check this website's Authorized JavaScript origin in Google Cloud."
+            : reason;
+          finish(reject, new Error(message));
+        },
       });
       client.requestAccessToken({ prompt: "consent" });
     });

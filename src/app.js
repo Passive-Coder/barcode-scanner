@@ -341,4 +341,10 @@ if (window.gsap && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
   window.gsap.from(".page-heading > div:first-child > *", { opacity: 0, y: 20, duration: 0.75, stagger: 0.12, ease: "power3.out" });
   window.gsap.from(".main-grid > section", { opacity: 0, y: 24, duration: 0.8, stagger: 0.12, delay: 0.22, ease: "power3.out" });
   window.gsap.from(".hero-rule path", { strokeDasharray: 1600, strokeDashoffset: 1600, duration: 2, stagger: 0.14, ease: "power2.out" });
+  const sheetMotion = new IntersectionObserver((entries) => {
+    if (!entries[0]?.isIntersecting) return;
+    window.gsap.fromTo(".sheets-intro > *", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.65, stagger: 0.12, ease: "power2.out" });
+    sheetMotion.disconnect();
+  }, { threshold: 0.25 });
+  sheetMotion.observe($(".sheets-intro"));
 }
