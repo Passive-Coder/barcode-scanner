@@ -81,8 +81,8 @@ export class SheetsWorkspace {
     if (this.activeId) await this.loadDocument(this.activeId);
   }
 
-  async addLink() {
-    const id = parseSpreadsheetId($("#sheet-link-input").value);
+  async addLink(url = $("#sheet-link-input").value) {
+    const id = parseSpreadsheetId(url);
     if (!this.auth.connected) throw new Error("Connect Google first, then open the spreadsheet.");
     await this.loadDocument(id);
     const title = this.metadata.properties?.title || id;

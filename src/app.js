@@ -2,6 +2,7 @@ import { BarcodeScanner, PUBLIC_TEST_LICENSE } from "./scanner.js";
 import { interpret } from "./interpret.js";
 import { extractScanFields } from "./barcode-fields.js";
 import { SheetsWorkspace } from "./sheets-workspace.js";
+import { MobileShell } from "./mobile-shell.js";
 
 const $ = (selector) => document.querySelector(selector);
 const elements = {
@@ -31,6 +32,7 @@ const sheets = new SheetsWorkspace({
   onError: (error, context) => { console.error(context, error); showToast(error.message || String(error)); },
   onMappingChange: renderResults,
 });
+const mobile = new MobileShell({ sheets, scanner, toast: showToast, onOpenAdvanced: openSettings, onStopCamera: stopCamera });
 
 function el(tag, className, text) {
   const node = document.createElement(tag);

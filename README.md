@@ -2,6 +2,8 @@
 
 A browser based barcode scanner using the supplied Dynamsoft Barcode Reader JS 11.6.3200 package. It decodes camera feeds and uploaded images, identifies typed values inside QR and other barcode payloads, and can record selected values to Google Sheets. The interface uses a burgundy and ivory theme inspired by the supplied apparel reference, with GSAP motion that respects reduced motion settings.
 
+On mobile, Google sign-in leads through an animated Student Council mark to a home menu. **Barcode Scanning** and **Edit Google Sheets** each open the saved spreadsheet list, with a Google Sheets link field when no spreadsheet is linked. Select a spreadsheet to enter the chosen workspace. The mark in the home header opens account settings and sign-out. Scanner and OAuth configuration remain available under **Scanner & account setup** there. The five-part mark is vector artwork traced from the supplied reference; the reference screenshots are not in the repository.
+
 ## Google Sheets workflow
 
 1. Select **Connect Google** and grant Sheets access.
@@ -46,6 +48,7 @@ The sample key in the supplied Dynamsoft package was rejected by Dynamsoft's lic
 
 - `index.html`: semantic app shell
 - `src/app.js`: camera, image, results, and session history
+- `src/mobile-shell.js`, `src/council-mark.js`, `src/assets/air-ribbons.svg`: mobile navigation and reference-inspired artwork
 - `src/barcode-fields.js`: typed field extraction
 - `src/sheets-workspace.js`: spreadsheet interface and field mappings
 - `src/google/auth.js`: browser OAuth token handling
