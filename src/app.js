@@ -213,7 +213,7 @@ function renderResults() {
   }
   const table = el("div", "details-table");
   table.append(
-    detailRow("Content", interpreted.kind),
+    detailRow("Content", fields.find((field) => field.key === "contentType")?.value || interpreted.kind),
     detailRow("Format", scan.format),
     detailRow("Size", `${scan.bytes} ${scan.bytes === 1 ? "byte" : "bytes"}`),
     detailRow("Source", scan.source),
