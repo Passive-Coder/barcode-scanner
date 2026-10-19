@@ -13,7 +13,7 @@ export function interpret(text, format) {
     return { kind: "Phone number", fields: [["Number", value.slice(4)]] };
   }
   if (value.startsWith("WIFI:")) {
-    const fields = Object.fromEntries([...value.matchAll(/(?:^|;)([ST]):((?:\\.|[^;])*)/g)].map((m) => [m[1], m[2].replace(/\\([;:,\\])/g, "$1")]));
+    const fields = Object.fromEntries([...value.slice(5).matchAll(/(?:^|;)([ST]):((?:\\.|[^;])*)/g)].map((m) => [m[1], m[2].replace(/\\([;:,\\])/g, "$1")]));
     return { kind: "Wi-Fi network", fields: [["Network", fields.S || "Unknown"], ["Security", fields.T || "None"]] };
   }
   if (/^(BEGIN:VCARD|MECARD:)/i.test(value)) return { kind: "Contact", fields: [] };

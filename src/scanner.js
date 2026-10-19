@@ -14,7 +14,6 @@ CoreModule.engineResourcePaths.dbrBundle = new URL("../vendor/dynamsoft/dist/", 
 
 // Dynamsoft's public evaluation key is valid for 24 hours per new browser.
 export const PUBLIC_TEST_LICENSE = "DLS2eyJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSJ9";
-export const hasLicense = () => Boolean(localStorage.getItem("linework-license") || PUBLIC_TEST_LICENSE);
 const license = localStorage.getItem("linework-license") || PUBLIC_TEST_LICENSE;
 const licenseReady = Promise.resolve().then(() => LicenseManager.initLicense(license));
 // Surface authorization errors through camera/image actions instead of an unhandled promise.
