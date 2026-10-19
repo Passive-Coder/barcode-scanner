@@ -1,10 +1,11 @@
+const DEFAULT_CLIENT_ID = "1045236525603-6r4t47890f4140119g8bd2729277ube6.apps.googleusercontent.com";
 const CLIENT_ID_STORAGE_KEY = "linework-dedicated-google-client-id";
 const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets";
 const EMAIL_SCOPE = "https://www.googleapis.com/auth/userinfo.email";
 
 export class GoogleAuth {
   constructor() {
-    this.clientId = localStorage.getItem(CLIENT_ID_STORAGE_KEY) || "";
+    this.clientId = localStorage.getItem(CLIENT_ID_STORAGE_KEY) || DEFAULT_CLIENT_ID;
     this.accessToken = null;
     this.expiresAt = 0;
     this.email = "";
