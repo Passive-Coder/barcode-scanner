@@ -1,11 +1,10 @@
-const DEFAULT_CLIENT_ID = "1045236525603-ocqsq97eiuojulk6ikgs0m6je7b51pug.apps.googleusercontent.com";
-const CLIENT_ID_STORAGE_KEY = "linework-google-client-id";
+const CLIENT_ID_STORAGE_KEY = "linework-dedicated-google-client-id";
 const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets";
 const EMAIL_SCOPE = "https://www.googleapis.com/auth/userinfo.email";
 
 export class GoogleAuth {
   constructor() {
-    this.clientId = localStorage.getItem(CLIENT_ID_STORAGE_KEY) || DEFAULT_CLIENT_ID;
+    this.clientId = localStorage.getItem(CLIENT_ID_STORAGE_KEY) || "";
     this.accessToken = null;
     this.expiresAt = 0;
     this.email = "";
@@ -34,6 +33,9 @@ export class GoogleAuth {
   }
 
   async connect() {
+    if (!this.clientId) {
+      throw new Error("Add the dedicated Linework Google OAuth Web Client ID in Settings before connecting.");
+    }
     if (!window.google?.accounts?.oauth2) {
       throw new Error("Google sign-in did not load. Check your connection and try again.");
     }

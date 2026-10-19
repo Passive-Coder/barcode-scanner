@@ -14,12 +14,12 @@ The app accepts a Google Sheets link, not a Google Docs text document. It does n
 
 ## Google OAuth setup
 
-The public OAuth Web Client ID is reused from the local Scavenger Hunt project. No client secret is included. In that Google Cloud project's OAuth client settings, add these **Authorized JavaScript origins**:
+Create a dedicated Google Cloud project and OAuth Web Client for Linework. The app does not include a client secret. Add these **Authorized JavaScript origins** to the new client:
 
 - `https://linework-barcode-scanner.passiveuser369.workers.dev`
 - `http://localhost:8000` for local development
 
-Enable the **Google Sheets API** in the same Cloud project. If the OAuth consent screen is in testing mode, add the intended Google accounts as test users. The sign-in flow requests `spreadsheets` and `userinfo.email` scopes. You can use a different OAuth Web Client ID through the app's Settings.
+Enable the **Google Sheets API** in the new Cloud project and configure the consent screen for `spreadsheets` and `userinfo.email` scopes. If the consent screen is in testing mode, add the intended Google accounts as test users. Enter the new public OAuth Web Client ID in the app's Settings. The scanner works without Google sign-in, but spreadsheet access requires this setup.
 
 ## Run locally
 
