@@ -49,7 +49,7 @@ export class GoogleAuth {
         clearTimeout(timeout);
         callback(value);
       };
-      const timeout = setTimeout(() => finish(reject, new Error("Google sign-in timed out. Please try again.")), 120_000);
+      const timeout = setTimeout(() => finish(reject, new Error("Google sign-in timed out. Please try again.")), 600_000);
       const client = window.google.accounts.oauth2.initTokenClient({
         client_id: this.clientId,
         scope: `${SHEETS_SCOPE} ${EMAIL_SCOPE}`,

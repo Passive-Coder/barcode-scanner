@@ -19,7 +19,7 @@ Linework uses its own OAuth Web Client in the existing `perfect-nature-463213-t8
 - `https://linework-barcode-scanner.passiveuser369.workers.dev`
 - `http://localhost:8000` for local development
 
-The **Google Sheets API** is enabled in the shared Cloud project, and its consent screen includes `spreadsheets` and `userinfo.email` scopes. While the consent screen remains in testing mode, only its listed test users can connect. Its branding is shared with the other apps in that project. The public OAuth Web Client ID can be changed in the app's Settings if this setup changes.
+The **Google Sheets API** is enabled in the shared Cloud project, and its consent screen includes `spreadsheets` and `userinfo.email` scopes. While the consent screen remains in testing mode, only its listed test users can connect. Google shows an unverified-app warning to test users. Its branding is shared with the other apps in that project. The public OAuth Web Client ID can be changed in the app's Settings if this setup changes.
 
 ## Run locally
 
