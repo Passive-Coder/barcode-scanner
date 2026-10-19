@@ -12,6 +12,17 @@ python3 -m http.server 8000
 
 Then visit [http://localhost:8000](http://localhost:8000). Camera access requires localhost or HTTPS. Image scanning works without a camera. The scanner SDK's runtime assets are included under `vendor/dynamsoft` and must be served along with the app.
 
+## Deploy to Cloudflare Pages
+
+Prepare a clean static output directory and upload it with Wrangler:
+
+```sh
+node scripts/build.mjs
+npx wrangler pages deploy dist --project-name=<your-pages-project>
+```
+
+The build copies only the app shell, source, and required Dynamsoft distribution files. `dist/` is generated and ignored by Git. For Cloudflare Pages Git integration, set the build command to `node scripts/build.mjs` and the output directory to `dist`.
+
 ## License
 
 Dynamsoft requires a valid license to decode barcodes. The sample key in the supplied package was rejected by Dynamsoft's license server. The app instead starts with [Dynamsoft's documented public test key](https://www.dynamsoft.com/barcode-reader/docs/web/programming/javascript/user-guide/), which is valid for 24 hours in a newly authorized browser. For continued use, open the gear icon in the app and enter your own key. The key is stored in this browser's local storage. License verification needs network access to Dynamsoft. A 30-day trial key can be requested from [Dynamsoft](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr&package=js).
