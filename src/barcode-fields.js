@@ -15,7 +15,7 @@ function stringify(value) {
 
 function flattenJson(value, prefix = "", output = []) {
   if (output.length >= 40) return output;
-  if (value && typeof value === "object" && !Array.isArray(value)) {
+  if (value && typeof value === "object") {
     for (const [key, child] of Object.entries(value)) {
       flattenJson(child, prefix ? `${prefix}.${key}` : key, output);
       if (output.length >= 40) break;
@@ -24,6 +24,40 @@ function flattenJson(value, prefix = "", output = []) {
     output.push({ key: `json.${prefix}`, label: prefix, value: stringify(value), type: classify(value) });
   }
   return output;
+}
+
+function parseMecard(text) {
+  const labels = { N: "Name", TEL: "Phone", EMAIL: "Email", ADR: "Address", ORG: "Organization", URL: "Website", NOTE: "Note" };
+  return text.slice(7).split(";").flatMap((part) => {
+    const match = part.match(/^([A-Z]+):(.*)$/i);
+    if (!match) return [];
+    const name = match[1].toUpperCase();
+    if (!labels[name]) return [];
+    const value = match[2].trim();
+    return [{ key: `contact.${name.toLowerCase()}`, label: labels[name], value, type: classify(value) }];
+  });
+}
+
+function inferPairType(value) {
+  if (/^(true|false)$/i.test(value)) return "Boolean";
+  if (/^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(value) && value.length <= 15) return "Number";
+  return classify(value);
+}
+
+function parsePairs(text) {
+  let parts = text.split(/\r?\n|;/).map((part) => part.trim()).filter(Boolean);
+  if (parts.length < 2) {
+    const commaParts = text.split(",").map((part) => part.trim()).filter(Boolean);
+    if (commaParts.length > 1 && commaParts.every((part) => /^[\w ./-]{1,40}\s*[:=]/.test(part))) parts = commaParts;
+  }
+  if (!parts.length || !parts.every((part) => /^[\w ./-]{1,40}\s*[:=]/.test(part))) return [];
+  return parts.slice(0, 40).map((part) => {
+    const match = part.match(/^([\w ./-]{1,40})\s*[:=]\s*(.*)$/);
+    const label = match[1].trim();
+    const value = match[2].trim();
+    const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, ".").replace(/^\.|\.$/g, "");
+    return { key: `field.${slug}`, label, value, type: inferPairType(value) };
+  });
 }
 
 function parseWifi(text) {
@@ -87,7 +121,7 @@ export function extractScanFields(scan) {
     parsed = parseWifi(trimmed);
   } else if (/^(BEGIN:VCARD|MECARD:)/i.test(trimmed)) {
     contentType = "Contact";
-    parsed = parseVcard(trimmed);
+    parsed = /^MECARD:/i.test(trimmed) ? parseMecard(trimmed) : parseVcard(trimmed);
   } else if (/^mailto:/i.test(trimmed)) {
     contentType = "Email address";
     parsed = [{ key: "email.address", label: "Email", value: trimmed.slice(7).split("?")[0], type: "Email" }];
@@ -100,6 +134,9 @@ export function extractScanFields(scan) {
   } else if (/^(EAN|UPC|GTIN)/i.test(scan.format) && /^\d+$/.test(trimmed)) {
     contentType = "Product identifier";
     parsed = [{ key: "product.identifier", label: "Identifier", value: trimmed, type: "Text" }];
+  } else {
+    parsed = parsePairs(trimmed);
+    if (parsed.length) contentType = "Labeled values";
   }
 
   const base = [

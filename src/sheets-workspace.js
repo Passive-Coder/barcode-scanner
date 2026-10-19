@@ -27,7 +27,7 @@ function option(value, label) {
 
 function sheetValue(field) {
   if (field.type === "Number" && Number.isFinite(Number(field.value)) && field.value !== "") return Number(field.value);
-  if (field.type === "Boolean") return field.value === "true";
+  if (field.type === "Boolean") return String(field.value).toLowerCase() === "true";
   return field.value;
 }
 

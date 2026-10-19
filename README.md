@@ -6,7 +6,7 @@ A browser based barcode scanner using the supplied Dynamsoft Barcode Reader JS 1
 
 1. Select **Connect Google** and grant Sheets access.
 2. Paste a Google Sheets spreadsheet link, then select one of its tabs.
-3. Scan a barcode to discover its fields, values, and inferred types. Supported payloads include JSON objects and arrays, URLs and query parameters, Wi-Fi codes, vCards, email and telephone links, GS1 application identifiers, and retail identifiers. Raw value, barcode format, content type, byte size, and scan time are always available.
+3. Scan a barcode to discover its fields, values, and inferred types. Supported payloads include JSON objects and arrays, URLs and query parameters, Wi-Fi codes, vCards and MECARD contacts, labeled `Name: value` or `Name=value` lines, email and telephone links, GS1 application identifiers, and retail identifiers. Raw value, barcode format, content type, byte size, and scan time are always available.
 4. Assign each sheet column a field from the latest scan. Further scans show the selected fields first and automatically write all matching values to a single new row. Fields absent from a scan leave their mapped cells blank. A scan with no matching mapped fields is not written.
 5. Use the sheet workspace to add, rename, or delete tabs and columns, and add, edit, or delete rows. The app reads and displays the first 1,000 rows of the selected tab. Refresh to see changes made elsewhere.
 
