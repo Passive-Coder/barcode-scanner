@@ -1,48 +1,50 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#101a20" />
-    <meta name="description" content="Scan barcodes with your camera or an image and inspect the decoded data." />
-    <title>Linework — Barcode scanner</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./src/styles.css" />
-    <script type="module" src="./src/app.js"></script>
-  </head>
-  <body>
-    <div class="app-shell">
-      <header class="topbar">
-        <a class="brand" href="./" aria-label="Linework home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span>linework<span class="brand-dot">.</span></span></a>
-        <div class="topbar-right"><span class="topbar-caption">BARCODE READER / 11.6</span><button class="icon-button settings-button" id="settings-button" type="button" aria-label="License settings" title="License settings">⚙</button></div>
-      </header>
-
-      <main class="workspace">
-        <div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> THE WORKSPACE</div><h1>Scanner<span class="heading-period">.</span></h1><p>Point your camera at a code, or choose an image to inspect it.</p></div><div class="session-label"><span class="session-dot"></span><span>LOCAL SESSION</span></div></div>
-
-        <div class="main-grid">
-          <section class="scanner-column" aria-labelledby="scan-heading">
-            <div class="section-heading"><h2 id="scan-heading">Capture</h2><span>01 / SCAN</span></div>
-            <div class="mode-tabs" role="tablist" aria-label="Capture mode"><button id="camera-tab" class="mode-tab active" type="button" role="tab" aria-selected="true">Camera</button><button id="image-tab" class="mode-tab" type="button" role="tab" aria-selected="false">Image upload</button></div>
-            <div id="camera-panel" role="tabpanel" aria-labelledby="camera-tab">
-              <div class="camera-frame" id="camera-frame"><div id="camera-view" class="camera-view"></div><div id="camera-empty" class="camera-empty"><div class="camera-glyph" aria-hidden="true"><span></span></div><strong>Ready when you are.</strong><p>Allow camera access to start reading barcodes in real time.</p></div><div class="scan-guide" aria-hidden="true"><span></span><span></span><span></span><span></span><div class="scan-line"></div></div><span class="frame-corner frame-corner-tl"></span><span class="frame-corner frame-corner-tr"></span><span class="frame-corner frame-corner-bl"></span><span class="frame-corner frame-corner-br"></span><span id="live-badge" class="live-badge" hidden><span></span> LIVE FEED</span></div>
-              <div class="capture-controls"><button id="start-button" class="primary-button" type="button"><span class="button-icon">⌁</span><span id="start-label">Start camera</span><span class="button-arrow">↗</span></button><button id="torch-button" class="secondary-button" type="button" disabled title="Torch unavailable">Flash off</button><select id="camera-select" class="camera-select" aria-label="Choose camera" hidden></select></div>
-              <p class="capture-hint" id="capture-hint">Camera access requires localhost or a secure HTTPS connection.</p>
-            </div>
-            <div id="image-panel" role="tabpanel" aria-labelledby="image-tab" hidden><label class="drop-zone" id="drop-zone" for="image-input"><span class="upload-icon" aria-hidden="true">↥</span><strong>Drop an image here</strong><span>or click to choose a file</span><small>JPG, PNG, WebP, GIF, BMP · up to 20 MB</small></label><input id="image-input" class="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp" /><p class="capture-hint">Images are decoded in your browser and are not uploaded to this app.</p></div>
-          </section>
-
-          <section class="results-column" aria-labelledby="details-heading"><div class="section-heading"><h2 id="details-heading">Decoded data</h2><span>02 / RESULTS</span></div><div id="result-area" class="result-area"><div class="result-empty"><div class="empty-bars" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><h3>Nothing scanned yet</h3><p>Scanned barcode details will appear here.</p></div></div></section>
-        </div>
-
-        <section class="history-section" aria-labelledby="history-heading"><div class="section-heading"><h2 id="history-heading">This session</h2><button id="clear-button" class="text-button" type="button" disabled>Clear history</button></div><div id="history-list" class="history-list"><p class="history-empty">Your scans will be listed here for quick reference.</p></div></section>
-      </main>
-      <footer class="footer"><span>LINEWORK / SCAN WITH CLARITY</span><span>Powered by Dynamsoft Barcode Reader</span></footer>
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#650a18">
+  <meta name="description" content="Scan barcodes, inspect typed values, and record selected fields in Google Sheets.">
+  <title>Linework — Scan & record</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Libre+Caslon+Display&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./src/styles.css">
+  <script defer src="https://accounts.google.com/gsi/client"></script>
+  <script defer src="./vendor/gsap/gsap.min.js"></script>
+  <script type="module" src="./src/app.js"></script>
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Linework home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span>linework<span class="brand-dot">.</span></span></a>
+    <div class="topbar-right"><span class="topbar-caption">SCAN / STRUCTURE / SYNC</span><span id="account-label" class="account-label">GOOGLE NOT CONNECTED</span><button id="google-button" class="outline-button" type="button">Connect Google ↗</button><button class="icon-button" id="settings-button" type="button" aria-label="Settings" title="Settings">⚙</button></div>
+  </header>
+  <main class="workspace">
+    <div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> THE SCANNING STUDIO <span class="eyebrow-number">/ 01—03</span></div><h1>Every code<br><em>in its place.</em></h1><p>Decode the details. Choose the fields that matter. Send every scan exactly where it belongs.</p></div><div class="hero-seal" aria-hidden="true"><div class="seal-burst">✳</div><span>LINEWORK<br>SCANNER</span></div></div>
+    <div class="hero-rule" aria-hidden="true"><svg viewBox="0 0 1200 70" preserveAspectRatio="none"><path d="M0 58 C170 58 170 8 360 8 S590 62 780 38 S1040 5 1200 42"/><path d="M0 68 C170 68 180 20 360 20 S590 73 780 50 S1040 17 1200 54"/><path d="M0 46 C170 46 180 -4 360 -4 S590 51 780 27 S1040 -6 1200 30"/></svg></div>
+    <div class="main-grid">
+      <section class="scanner-column" aria-labelledby="scan-heading"><div class="section-heading"><div><span class="section-index">01</span><h2 id="scan-heading">Capture</h2></div><span>POINT / FRAME / READ</span></div>
+        <div class="mode-tabs" role="tablist" aria-label="Capture mode"><button id="camera-tab" class="mode-tab active" type="button" role="tab" aria-selected="true">Live camera</button><button id="image-tab" class="mode-tab" type="button" role="tab" aria-selected="false">Image upload</button></div>
+        <div id="camera-panel" role="tabpanel" aria-labelledby="camera-tab"><div class="camera-frame" id="camera-frame"><div id="camera-view" class="camera-view"></div><div id="camera-empty" class="camera-empty"><div class="camera-glyph" aria-hidden="true"><span></span></div><strong>Ready when you are.</strong><p>Allow camera access to start reading barcodes in real time.</p></div><div class="scan-guide" aria-hidden="true"><span></span><span></span><span></span><span></span><div class="scan-line"></div></div><span class="frame-corner frame-corner-tl"></span><span class="frame-corner frame-corner-tr"></span><span class="frame-corner frame-corner-bl"></span><span class="frame-corner frame-corner-br"></span><span id="live-badge" class="live-badge" hidden><span></span> LIVE FEED</span></div><div class="capture-controls"><button id="start-button" class="primary-button" type="button"><span class="button-icon">⌁</span><span id="start-label">Start camera</span><span class="button-arrow">↗</span></button><button id="torch-button" class="secondary-button" type="button" disabled title="Torch unavailable">Flash off</button><select id="camera-select" class="camera-select" aria-label="Choose camera" hidden></select></div><p class="capture-hint" id="capture-hint">Camera access requires localhost or a secure HTTPS connection.</p></div>
+        <div id="image-panel" role="tabpanel" aria-labelledby="image-tab" hidden><label class="drop-zone" id="drop-zone" for="image-input"><span class="upload-icon" aria-hidden="true">↥</span><strong>Drop an image here</strong><span>or click to choose a file</span><small>JPG, PNG, WebP, GIF, BMP · up to 20 MB</small></label><input id="image-input" class="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp"><p class="capture-hint">Images are decoded in your browser.</p></div>
+      </section>
+      <section class="results-column" aria-labelledby="details-heading"><div class="section-heading"><div><span class="section-index">02</span><h2 id="details-heading">Decoded values</h2></div><span>INSPECT / SELECT</span></div><div id="result-area" class="result-area"><div class="result-empty"><div class="empty-bars" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><h3>Nothing scanned yet</h3><p>Every detected field and its value type will appear here.</p></div></div></section>
     </div>
-
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <dialog id="settings-dialog" class="settings-dialog"><form method="dialog" id="settings-form"><div class="dialog-top"><div><span class="eyebrow">SETUP</span><h2>License settings</h2></div><button class="dialog-close" type="submit" value="cancel" aria-label="Close">×</button></div><p>This app starts with Dynamsoft’s public 24-hour test key. For continued use, <a href="https://www.dynamsoft.com/customer/license/trialLicense?product=dbr&package=js" target="_blank" rel="noopener noreferrer">get a 30-day trial key ↗</a> or enter your own. Your key stays in this browser.</p><label for="license-input">Dynamsoft license key</label><textarea id="license-input" rows="4" spellcheck="false" autocomplete="off"></textarea><div class="dialog-actions"><button type="submit" value="cancel" class="secondary-button">Cancel</button><button id="save-license" type="button" class="primary-button">Save & reload</button></div></form></dialog>
-  </body>
+    <section class="sheets-section" aria-labelledby="sheets-heading"><div class="section-heading"><div><span class="section-index">03</span><h2 id="sheets-heading">Google Sheets workspace</h2></div><span>MAP / WRITE / MANAGE</span></div>
+      <div class="sheets-intro"><div><span class="tiny-label">YOUR DESTINATION</span><h3>From scan to spreadsheet.</h3><p>Connect Google, paste a Sheets link, then assign each spreadsheet column the barcode field it should receive. A scan writes all selected values into one new row.</p></div><div class="sync-mark" aria-hidden="true">↗</div></div>
+      <div class="sheet-connect-row"><label class="field-grow"><span>GOOGLE SHEETS LINK</span><input id="sheet-link-input" type="url" placeholder="https://docs.google.com/spreadsheets/d/…" autocomplete="url"></label><button id="add-link-button" class="primary-button" type="button">Open sheet <span>↗</span></button></div>
+      <div class="sheet-toolbar"><label><span>LINKED SPREADSHEET</span><select id="document-select" aria-label="Linked spreadsheet"><option value="">Choose a spreadsheet</option></select></label><label><span>SHEET TAB</span><select id="tab-select" aria-label="Sheet tab"><option value="">Choose a tab</option></select></label><button id="refresh-sheet" class="secondary-button" type="button">Refresh</button><button id="forget-link" class="quiet-button" type="button">Forget link</button></div>
+      <div id="sheet-status" class="sheet-status" role="status">Connect Google to read your spreadsheet and manage its data.</div>
+      <div id="sheet-content" hidden><div class="sheet-actions"><div><span class="tiny-label">STRUCTURE</span><strong id="sheet-title">Spreadsheet</strong><span id="sheet-count"></span></div><div class="action-cluster"><button id="add-tab" class="quiet-button" type="button">+ Tab</button><button id="rename-tab" class="quiet-button" type="button">Rename tab</button><button id="delete-tab" class="quiet-button danger" type="button">Delete tab</button></div></div>
+        <div class="mapping-heading"><div><h3>Column mapping</h3><p>Choose a decoded field for each column. Mapped fields from future scans are shown first and saved together.</p></div><label class="toggle-row"><input id="auto-save" type="checkbox" checked><span>Auto save scans</span></label></div><div id="column-mappings" class="column-mappings"></div><div class="mapping-footer"><button id="add-column" class="secondary-button" type="button">+ Add column</button><span id="mapping-count">Scan a barcode to reveal available fields.</span></div>
+        <div class="data-heading"><div><h3>Sheet data</h3><p>Read and edit the first 1,000 rows. Changes are saved directly to Google Sheets.</p></div><button id="add-row" class="primary-button" type="button">+ Add row</button></div><div id="sheet-table" class="sheet-table-wrap"></div>
+      </div>
+    </section>
+    <section class="history-section" aria-labelledby="history-heading"><div class="section-heading"><div><span class="section-index">04</span><h2 id="history-heading">This session</h2></div><button id="clear-button" class="text-button" type="button" disabled>Clear history</button></div><div id="history-list" class="history-list"><p class="history-empty">Your scans will be listed here for quick reference.</p></div></section>
+  </main>
+  <footer class="footer"><span>LINEWORK / SCAN WITH CLARITY</span><span>Powered by Dynamsoft Barcode Reader</span></footer>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<dialog id="settings-dialog" class="settings-dialog"><form method="dialog" id="settings-form"><div class="dialog-top"><div><span class="eyebrow">SETUP</span><h2>Settings</h2></div><button class="dialog-close" type="submit" value="cancel" aria-label="Close">×</button></div><p>The supplied sample Dynamsoft key was rejected. This app tries Dynamsoft’s public 24-hour test key and falls back to your browser’s barcode reader when available. Add your own key for ongoing Dynamsoft use.</p><label for="license-input">Dynamsoft license key</label><textarea id="license-input" rows="3" spellcheck="false" autocomplete="off"></textarea><button id="save-license" type="button" class="secondary-button">Save license & reload</button><div class="settings-divider"></div><p>Google sign-in uses an OAuth Web Client ID from the Scavenger Hunt project. This website’s origin must be authorized for that client in Google Cloud.</p><label for="client-id-input">Google OAuth Web Client ID</label><input id="client-id-input" type="text" spellcheck="false" autocomplete="off"><div class="dialog-actions"><button id="disconnect-google" type="button" class="quiet-button">Disconnect Google</button><button id="save-client-id" type="button" class="primary-button">Save client ID</button></div></form></dialog>
+<dialog id="edit-dialog" class="settings-dialog edit-dialog"><form id="edit-form" method="dialog"><div class="dialog-top"><div><span class="eyebrow">GOOGLE SHEETS</span><h2 id="edit-title">Edit</h2></div><button class="dialog-close" type="button" id="edit-close" aria-label="Close">×</button></div><p id="edit-description"></p><div id="edit-fields"></div><div class="dialog-actions"><button type="button" id="edit-cancel" class="secondary-button">Cancel</button><button type="submit" class="primary-button">Save changes</button></div></form></dialog>
+</body>
 </html>

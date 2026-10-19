@@ -1,5 +1,7 @@
 import { BarcodeScanner, PUBLIC_TEST_LICENSE } from "./scanner.js";
 import { interpret } from "./interpret.js";
+import { extractScanFields } from "./barcode-fields.js";
+import { SheetsWorkspace } from "./sheets-workspace.js";
 
 const $ = (selector) => document.querySelector(selector);
 const elements = {
@@ -23,6 +25,11 @@ let toastTimer;
 const scanner = new BarcodeScanner({
   cameraContainer: $("#camera-view"),
   onResults: addResults,
+});
+const sheets = new SheetsWorkspace({
+  onToast: showToast,
+  onError: (error, context) => { console.error(context, error); showToast(error.message || String(error)); },
+  onMappingChange: renderResults,
 });
 
 function el(tag, className, text) {
@@ -64,6 +71,7 @@ function setMode(mode) {
 
 function openSettings() {
   elements.licenseInput.value = localStorage.getItem("linework-license") || PUBLIC_TEST_LICENSE;
+  $("#client-id-input").value = sheets.auth.clientId;
   elements.settingsDialog.showModal();
 }
 
@@ -139,6 +147,9 @@ function addResults(items) {
     if (duplicate) continue;
     scans.unshift(item);
     selectedId = item.id;
+    const fields = extractScanFields(item);
+    sheets.setFields(fields);
+    sheets.recordScan(fields);
     added++;
   }
   if (scans.length > 50) scans.length = 50;
@@ -174,6 +185,9 @@ function renderResults() {
   }
 
   const interpreted = interpret(scan.text, scan.format);
+  const fields = extractScanFields(scan);
+  const selected = sheets.selectedFields(fields);
+  const shown = Object.keys(sheets.mapping).length ? selected : fields;
   const result = el("div", "result-content");
   const top = el("div", "result-top");
   top.append(el("span", "result-status", "●  DECODED SUCCESSFULLY"), el("span", "result-index", `${String(scans.length).padStart(2, "0")} IN SESSION`));
@@ -207,8 +221,39 @@ function renderResults() {
   );
   if (scan.confidence !== null) table.append(detailRow("Confidence", `${Math.round(scan.confidence)}%`));
   if (scan.angle !== null) table.append(detailRow("Rotation", `${Math.round(scan.angle)}°`));
-  result.append(top, format, payloadBlock, actions, el("h3", "details-heading", "Code details"), table);
+  const typedHeading = el("div", "typed-heading");
+  typedHeading.append(el("h3", "", Object.keys(sheets.mapping).length ? "Selected fields" : "Detected fields"), el("span", "", Object.keys(sheets.mapping).length ? `${selected.length} matching this scan` : `${fields.length} fields found`));
+  const typedList = el("div", "typed-list");
+  if (!shown.length) typedList.append(el("p", "empty-note", "This barcode contains none of the mapped fields."));
+  for (const field of shown) {
+    const row = el("div", "typed-row");
+    const name = el("div", "typed-name");
+    name.append(el("strong", "", field.label), el("code", "", field.key));
+    row.append(name, el("span", "type-pill", field.type), el("span", "typed-value", field.value || "—"));
+    typedList.append(row);
+  }
+  const allButton = el("button", "text-button show-all-fields", Object.keys(sheets.mapping).length ? "Show every detected field" : "");
+  if (Object.keys(sheets.mapping).length) {
+    allButton.type = "button";
+    allButton.addEventListener("click", () => {
+      typedList.replaceChildren(...fields.map((field) => {
+        const row = el("div", "typed-row");
+        const name = el("div", "typed-name");
+        name.append(el("strong", "", field.label), el("code", "", field.key));
+        row.append(name, el("span", "type-pill", field.type), el("span", "typed-value", field.value || "—"));
+        return row;
+      }));
+      allButton.remove();
+    });
+  }
+  result.append(top, format, payloadBlock, actions, typedHeading, typedList);
+  if (Object.keys(sheets.mapping).length) result.append(allButton);
+  result.append(el("h3", "details-heading", "Code details"), table);
   elements.resultArea.replaceChildren(result);
+  if (window.gsap && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    window.gsap.fromTo(result, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" });
+    window.gsap.fromTo(typedList.children, { opacity: 0, x: 10 }, { opacity: 1, x: 0, duration: 0.4, stagger: 0.035, ease: "power2.out" });
+  }
 
   elements.historyList.replaceChildren(...scans.map((item, index) => {
     const button = el("button", `history-item${item.id === scan.id ? " selected" : ""}`);
@@ -271,6 +316,23 @@ $("#save-license").addEventListener("click", () => {
   localStorage.setItem("linework-license", key);
   location.reload();
 });
+$("#save-client-id").addEventListener("click", () => {
+  try {
+    sheets.updateClientId($("#client-id-input").value);
+    elements.settingsDialog.close();
+    showToast("Google Client ID saved");
+  } catch (error) { showToast(error.message); }
+});
+$("#disconnect-google").addEventListener("click", () => {
+  sheets.disconnect();
+  elements.settingsDialog.close();
+  showToast("Google disconnected");
+});
 window.addEventListener("pagehide", () => scanner.dispose());
 
 setCameraUI();
+if (window.gsap && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  window.gsap.from(".page-heading > div:first-child > *", { opacity: 0, y: 20, duration: 0.75, stagger: 0.12, ease: "power3.out" });
+  window.gsap.from(".main-grid > section", { opacity: 0, y: 24, duration: 0.8, stagger: 0.12, delay: 0.22, ease: "power3.out" });
+  window.gsap.from(".hero-rule path", { strokeDasharray: 1600, strokeDashoffset: 1600, duration: 2, stagger: 0.14, ease: "power2.out" });
+}

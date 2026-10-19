@@ -10,6 +10,6 @@ mkdirSync(output, { recursive: true });
 
 cpSync(join(root, "index.html"), join(output, "index.html"));
 cpSync(join(root, "src"), join(output, "src"), { recursive: true });
-cpSync(join(root, "vendor", "dynamsoft"), join(output, "vendor", "dynamsoft"), { recursive: true });
+cpSync(join(root, "vendor"), join(output, "vendor"), { recursive: true });
 
 console.log("Cloudflare Pages assets prepared in dist/");
