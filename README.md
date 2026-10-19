@@ -10,7 +10,7 @@ A browser based barcode scanner using the supplied Dynamsoft Barcode Reader JS 1
 4. Assign each sheet column a field from the latest scan. Further scans show the selected fields first and automatically write all matching values to a single new row. Fields absent from a scan leave their mapped cells blank. A scan with no matching mapped fields is not written.
 5. Use the sheet workspace to add, rename, or delete tabs and columns, and add, edit, or delete rows. The app reads and displays the first 1,000 rows of the selected tab. Refresh to see changes made elsewhere.
 
-The app accepts a Google Sheets link, not a Google Docs text document. It does not create or delete an entire spreadsheet file. Linked URLs and column mappings stay in browser local storage. Google OAuth access tokens remain in memory and are cleared on page reload; reconnect to resume writing. Scan history is kept only for the current page session. Values are sent to Google Sheets with `RAW` input mode so barcode text is not interpreted as a formula.
+The app accepts a Google Sheets link, not a Google Docs text document. It does not create or delete an entire spreadsheet file. Linked URLs and column mappings stay in browser local storage. Google OAuth access tokens remain in memory and are cleared on page reload; reconnect to resume writing. Scan history is kept only for the current page session. Values are sent to Google Sheets with `RAW` input mode so barcode text is not interpreted as a formula. Detected numbers and booleans retain their cell types; identifiers remain text.
 
 ## Google OAuth setup
 

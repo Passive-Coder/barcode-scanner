@@ -55,7 +55,7 @@ function parseGs1(text) {
     key: `gs1.${match[1]}`,
     label: labels[match[1]] || `AI ${match[1]}`,
     value: match[2].trim(),
-    type: /^\d+$/.test(match[2].trim()) ? "Number" : "Text",
+    type: match[1] === "30" ? "Number" : ["11", "15", "17"].includes(match[1]) ? "Date" : "Text",
   }));
 }
 

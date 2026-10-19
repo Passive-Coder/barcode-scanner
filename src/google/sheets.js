@@ -77,7 +77,7 @@ export class SheetsClient {
   appendRow(id, title, values) {
     const range = `${sheetName(title)}!A1`;
     return this.request(`/${encodeURIComponent(id)}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, {
-      method: "POST", body: { majorDimension: "ROWS", values: [values.map((value) => String(value ?? ""))] },
+      method: "POST", body: { majorDimension: "ROWS", values: [values.map((value) => value ?? "")] },
     });
   }
 

@@ -5,6 +5,7 @@ const $ = (selector) => document.querySelector(selector);
 const LINKS_KEY = "linework-sheet-links";
 const MAPPINGS_KEY = "linework-sheet-mappings";
 const ACTIVE_KEY = "linework-active-sheet";
+const AUTOSAVE_KEY = "linework-auto-save";
 
 function readStored(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key)) || fallback; }
@@ -24,6 +25,12 @@ function option(value, label) {
   return item;
 }
 
+function sheetValue(field) {
+  if (field.type === "Number" && Number.isFinite(Number(field.value)) && field.value !== "") return Number(field.value);
+  if (field.type === "Boolean") return field.value === "true";
+  return field.value;
+}
+
 export class SheetsWorkspace {
   constructor({ onToast, onError, onMappingChange }) {
     this.auth = new GoogleAuth();
@@ -39,7 +46,7 @@ export class SheetsWorkspace {
     this.rows = [];
     this.lastFields = [];
     this.saving = Promise.resolve();
-    this.autoSave = true;
+    this.autoSave = localStorage.getItem(AUTOSAVE_KEY) !== "false";
     this.bind();
     this.render();
   }
@@ -155,6 +162,7 @@ export class SheetsWorkspace {
     });
     $("#auto-save").addEventListener("change", (event) => {
       this.autoSave = event.target.checked;
+      localStorage.setItem(AUTOSAVE_KEY, String(this.autoSave));
       this.onToast(this.autoSave ? "Automatic recording on" : "Automatic recording paused");
     });
     $("#add-tab").addEventListener("click", () => this.editText("Add a sheet tab", "Tab name", "", async (title) => {
@@ -303,7 +311,7 @@ export class SheetsWorkspace {
     const id = this.activeId, title = this.sheet.properties.title;
     const mapping = { ...this.mapping };
     const count = this.columns;
-    const byKey = new Map(fields.map((field) => [field.key, field.value]));
+    const byKey = new Map(fields.map((field) => [field.key, sheetValue(field)]));
     const values = Array.from({ length: count }, (_, index) => byKey.get(mapping[index]) ?? "");
     if (!values.some((value) => value !== "")) {
       this.onToast("No mapped field found in this barcode; nothing was saved");
@@ -331,6 +339,7 @@ export class SheetsWorkspace {
     $("#tab-select").value = this.sheet ? String(this.sheet.properties.sheetId) : "";
     $("#sheet-content").hidden = !this.sheet;
     $("#sheet-title").textContent = this.metadata?.properties?.title || "Spreadsheet";
+    $("#auto-save").checked = this.autoSave;
     $("#sheet-count").textContent = this.sheet ? ` · ${this.sheet.properties.title}` : "";
     $("#refresh-sheet").disabled = !this.activeId || !this.auth.connected;
     $("#forget-link").disabled = !this.activeId;
