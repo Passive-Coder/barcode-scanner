@@ -1,23 +1,33 @@
 <script>
-  /** @type {{ title: string, subtitle: string, onclick: () => void }} */
-  let { title, subtitle, onclick } = $props();
+  /**
+   * @type {{
+   *   title: string,
+   *   subtitle: string,
+   *   onclick: () => void,
+   *   art?: import("svelte").Snippet,
+   * }}
+   */
+  let { title, subtitle, onclick, art } = $props();
 </script>
 
 <button class="card" type="button" {onclick}>
-  <span class="text">
-    <strong>{title}</strong>
-    <span>{subtitle}</span>
+  {#if art}<span class="art">{@render art()}</span>{/if}
+  <span class="body">
+    <span class="text">
+      <strong>{title}</strong>
+      <span>{subtitle}</span>
+    </span>
+    <span class="chevron" aria-hidden="true"></span>
   </span>
-  <span class="chevron" aria-hidden="true"></span>
 </button>
 
 <style>
   .card {
     width: 100%;
     display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 18px 18px 18px 20px;
+    flex-direction: column;
+    gap: 14px;
+    padding: 12px 12px 16px;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--surface);
@@ -30,6 +40,17 @@
   .card:active {
     background: var(--surface-hover);
     border-color: var(--line-strong);
+  }
+
+  .art {
+    display: block;
+  }
+
+  .body {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 6px 0 8px;
   }
 
   .text {

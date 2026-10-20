@@ -21,7 +21,7 @@
     position: absolute;
     left: 0;
     width: 100%;
-    height: clamp(150px, 27svh, 280px);
+    height: var(--ribbon-height, clamp(150px, 27svh, 280px));
     pointer-events: none;
     z-index: -1;
   }
