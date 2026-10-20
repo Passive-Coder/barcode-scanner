@@ -1,5 +1,10 @@
 name = "linework-barcode-scanner"
 compatibility_date = "2026-10-19"
+workers_dev = true
+
+[[routes]]
+pattern = "linework.stucovitv.in"
+custom_domain = true
 
 # Static assets produced by `npm run build`. Caching and security headers live in public/_headers.
 [assets]

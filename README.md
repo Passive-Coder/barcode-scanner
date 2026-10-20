@@ -40,14 +40,15 @@ The client ID can be overridden per browser in **Settings**. An override is kept
 
 ## Google OAuth setup
 
-Linework uses its own OAuth Web Client in the existing `perfect-nature-463213-t8` Google Cloud project. Its **Authorized JavaScript origins** are:
+Linework uses its own OAuth Web Client in the existing `perfect-nature-463213-t8` Google Cloud project. Allow these **Authorized JavaScript origins** for sign-in:
 
-- `https://linework-barcode-scanner.passiveuser369.workers.dev`
+- `https://linework.stucovitv.in` (primary, on the owned domain)
+- `https://linework-barcode-scanner.passiveuser369.workers.dev` (existing fallback)
 - `http://localhost:3000` for local development (`http://localhost:8000` is also allowed)
 
 The **Google Sheets API** is enabled in that project. The first Google sign-in requests the `spreadsheets`, `userinfo.email`, and `userinfo.profile` scopes together. The Sheets token belongs to the person signing in; no separate owner account or app-wide Sheets credential is used. Anyone whose Google account can open a linked spreadsheet can view it in Linework, and anyone with Editor access can record scans and make changes. The profile scope supplies the first name in the mobile greeting.
 
-The shared Cloud project's OAuth audience is **External** and **In production**. Google currently marks its branding and sensitive Sheets scope as unverified. New users may see Google's unverified-app warning, and the project has a lifetime **100-user grant cap** until Google approves the scope. Its branding is currently `The-Case`, because the project also hosts other OAuth clients. Broad public access requires finishing Google's branding and data-access verification for that shared project; changing its branding affects those other clients.
+The shared Cloud project's OAuth audience is **External** and **In production**. Google currently marks its branding and sensitive Sheets scope as unverified. New users may see Google's unverified-app warning, and the project has a lifetime **100-user grant cap** until Google approves the scope. Broad public access requires finishing Google's branding and data-access verification for that shared project; its consent branding affects its other OAuth clients too.
 
 Access tokens stay in memory only. When a token expires, the app keeps your place and shows a **Reconnect** banner, which signs back in to the same account. A page reload signs you out.
 

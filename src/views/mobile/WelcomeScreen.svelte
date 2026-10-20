@@ -28,13 +28,13 @@
   <div class="content">
     <div class="mark"><CouncilMark label="Student Council" /></div>
     <h1 id="welcome-title">Linework</h1>
-    <p>Scan barcodes and record them straight into Google Sheets.</p>
+    <p>Scan barcodes, inspect their fields, and record selected values in a Google Sheet you choose.</p>
     <button class="google" type="button" disabled={busy} aria-busy={busy || undefined} onclick={signIn}>
       <GoogleGlyph />
       <span>{busy ? "Connecting…" : "Continue with Google"}</span>
     </button>
-    <span class="consent-note">You'll allow Linework to access your Google Sheets during sign-in.</span>
-    <a class="privacy" href="/privacy.html">Privacy policy</a>
+    <span class="consent-note">Sign-in asks for Google Sheets access so Linework can read and edit sheets you open here.</span>
+    <a class="privacy" href="/privacy">Privacy policy</a>
   </div>
   <Ribbons position="bottom" />
 </section>
