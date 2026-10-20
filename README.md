@@ -43,8 +43,9 @@ The client ID can be overridden per browser in **Settings**. An override is kept
 Linework uses its own OAuth Web Client in the existing `perfect-nature-463213-t8` Google Cloud project. Allow these **Authorized JavaScript origins** for sign-in:
 
 - `https://linework.stucovitv.in` (primary, on the owned domain)
-- `https://linework-barcode-scanner.passiveuser369.workers.dev` (existing fallback)
 - `http://localhost:3000` for local development (`http://localhost:8000` is also allowed)
+
+The old `workers.dev` address redirects to the owned domain. It is not an OAuth origin, because Google requires authorised domains to be verified by the project owner.
 
 The **Google Sheets API** is enabled in that project. The first Google sign-in requests the `spreadsheets`, `userinfo.email`, and `userinfo.profile` scopes together. The Sheets token belongs to the person signing in; no separate owner account or app-wide Sheets credential is used. Anyone whose Google account can open a linked spreadsheet can view it in Linework, and anyone with Editor access can record scans and make changes. The profile scope supplies the first name in the mobile greeting.
 

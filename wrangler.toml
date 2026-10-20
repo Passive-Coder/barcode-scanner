@@ -1,5 +1,6 @@
 name = "linework-barcode-scanner"
 compatibility_date = "2026-10-19"
+main = "src/worker.js"
 workers_dev = true
 
 [[routes]]
@@ -9,3 +10,5 @@ custom_domain = true
 # Static assets produced by `npm run build`. Caching and security headers live in public/_headers.
 [assets]
 directory = "./dist"
+binding = "ASSETS"
+run_worker_first = true
