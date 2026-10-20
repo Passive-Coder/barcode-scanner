@@ -3,6 +3,7 @@
   import { mobileNav } from "$lib/stores/layout.svelte.js";
   import { workspace } from "$lib/stores/workspace.svelte.js";
   import CapturePanel from "../../components/capture/CapturePanel.svelte";
+  import PendingChanges from "../../components/changes/PendingChanges.svelte";
   import ResultsPanel from "../../components/results/ResultsPanel.svelte";
   import SheetEditor from "../../components/sheets/SheetEditor.svelte";
   import SheetPicker from "../../components/sheets/SheetPicker.svelte";
@@ -31,6 +32,7 @@
       <h2 class="visually-hidden">Scan</h2>
       <CapturePanel />
       <RecordingBar />
+      <PendingChanges />
       <h2 class="visually-hidden">Latest scan</h2>
       <ResultsPanel compact />
     {:else}

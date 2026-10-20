@@ -8,3 +8,7 @@ dist/
 .env
 .env.*
 !.env.example
+
+# Local Worker secrets (VAPID private key and friends).
+.dev.vars
+.dev.vars.*

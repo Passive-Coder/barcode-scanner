@@ -4,10 +4,14 @@
   import { mobileNav } from "$lib/stores/layout.svelte.js";
   import AccountDialog from "../../components/settings/AccountDialog.svelte";
   import ChooseSheetScreen from "./ChooseSheetScreen.svelte";
+  import EventScreen from "./EventScreen.svelte";
+  import EventsScreen from "./EventsScreen.svelte";
   import HeaderLogo from "./HeaderLogo.svelte";
   import HomeScreen from "./HomeScreen.svelte";
   import RevealOverlay from "./RevealOverlay.svelte";
   import SheetSettingsScreen from "./SheetSettingsScreen.svelte";
+  import TeamScreen from "./TeamScreen.svelte";
+  import TeamsScreen from "./TeamsScreen.svelte";
   import WelcomeScreen from "./WelcomeScreen.svelte";
   import WorkspaceScreen from "./WorkspaceScreen.svelte";
 
@@ -30,6 +34,14 @@
     <ChooseSheetScreen />
   {:else if mobileNav.view === "sheet-settings"}
     <SheetSettingsScreen />
+  {:else if mobileNav.view === "events"}
+    <EventsScreen />
+  {:else if mobileNav.view === "event"}
+    <EventScreen />
+  {:else if mobileNav.view === "teams"}
+    <TeamsScreen />
+  {:else if mobileNav.view === "team"}
+    <TeamScreen />
   {:else}
     <WorkspaceScreen />
   {/if}

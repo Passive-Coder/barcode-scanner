@@ -1,5 +1,6 @@
 <script>
   import { SHEET_ROW_LIMIT } from "$lib/config.js";
+  import { attempt } from "$lib/feedback.js";
   import { deleteRow, editRow } from "$lib/sheet-actions.js";
   import { columnLetter } from "$lib/sheets/values.js";
   import { workspace } from "$lib/stores/workspace.svelte.js";
@@ -10,13 +11,51 @@
   /** Data rows with their 1-based sheet row numbers (row 1 holds the headings). */
   const dataRows = $derived(workspace.rows.slice(1).map((cells, index) => ({ cells, rowNumber: index + 2 })));
   const disabled = $derived(!workspace.canEdit);
+
+  /** The cell being edited in place, as in Google Sheets. @type {{ row: number, column: number, value: string, original: string } | null} */
+  let editing = $state(null);
+  /** A cell edit on its way to Google, shown until the rows reload. @type {{ row: number, column: number, value: string } | null} */
+  let saving = $state(null);
+
+  /** @param {number} row @param {number} column */
+  function startEdit(row, column) {
+    if (disabled || saving) return;
+    const original = workspace.rows[row - 1]?.[column] ?? "";
+    editing = { row, column, value: original, original };
+  }
+
+  async function commit() {
+    const cell = editing;
+    editing = null;
+    if (!cell || cell.value === cell.original) return;
+    saving = { row: cell.row, column: cell.column, value: cell.value };
+    await attempt(() => workspace.saveCell(cell.row, cell.column, cell.value), "Could not save the cell");
+    saving = null;
+  }
+
+  /** @param {KeyboardEvent} event */
+  function onkeydown(event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      void commit();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      editing = null;
+    }
+  }
+
+  /** @type {import("svelte/attachments").Attachment<HTMLInputElement>} */
+  const focusInput = (input) => {
+    input.focus();
+    input.select();
+  };
 </script>
 
 <section aria-labelledby="{id}-title">
   <div class="heading">
     <div>
       <h3 id="{id}-title">Rows</h3>
-      <p>Showing up to {SHEET_ROW_LIMIT.toLocaleString()} rows. Edits are saved straight to Google Sheets.</p>
+      <p>Showing up to {SHEET_ROW_LIMIT.toLocaleString()} rows. Double-click a cell to edit it; edits are saved straight to Google Sheets.</p>
     </div>
     <Button {disabled} onclick={() => editRow(null)}>Add row</Button>
   </div>
@@ -38,7 +77,24 @@
             <tr>
               <th class="number" scope="row">{row.rowNumber}</th>
               {#each columns as column (column)}
-                <td>{row.cells[column] || "—"}</td>
+                {#if editing?.row === row.rowNumber && editing.column === column}
+                  <td class="editing">
+                    <input
+                      class="cell-input"
+                      aria-label="{workspace.headers[column] || columnLetter(column)}, row {row.rowNumber}"
+                      bind:value={editing.value}
+                      onblur={commit}
+                      {onkeydown}
+                      {@attach focusInput}
+                    />
+                  </td>
+                {:else if saving?.row === row.rowNumber && saving.column === column}
+                  <td class="saving" aria-busy="true">{saving.value || "—"}</td>
+                {:else}
+                  <!-- Mouse shortcut only: each row's Edit button offers the same edit by keyboard. -->
+                  <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+                  <td class={{ editable: !disabled }} ondblclick={() => startEdit(row.rowNumber, column)}>{row.cells[column] || "—"}</td>
+                {/if}
               {/each}
               <td class="row-actions">
                 <Button variant="quiet" {disabled} aria-label="Edit row {row.rowNumber}" onclick={() => editRow(row.rowNumber)}>Edit</Button>
@@ -121,6 +177,32 @@
   tbody tr:hover td,
   tbody tr:hover th {
     background: var(--table-hover);
+  }
+
+  td.editable {
+    cursor: cell;
+  }
+
+  td.editing {
+    padding: 0;
+    background: var(--table-bg);
+    box-shadow: inset 0 0 0 2px var(--focus-ring);
+  }
+
+  .cell-input {
+    width: 100%;
+    min-height: 41px;
+    padding: 10px 14px;
+    border: 0;
+    background: transparent;
+    color: var(--table-ink);
+    font: inherit;
+    outline: none;
+  }
+
+  td.saving {
+    color: var(--table-muted);
+    font-style: italic;
   }
 
   .number {

@@ -25,6 +25,8 @@ class AuthStore {
   name = $state("");
   /** True while an expired session signs back in to the same account. */
   reconnecting = $state(false);
+  /** Scopes granted to the current token. Drive access is asked for only when it's needed. */
+  scopes = $state.raw(/** @type {string[]} */ ([]));
   #token = "";
   #expiresAt = 0;
   /** @type {ReturnType<typeof setTimeout> | undefined} */
@@ -68,9 +70,7 @@ class AuthStore {
         prompt: reconnecting ? "" : "select_account",
         loginHint: reconnecting ? this.email : undefined,
       });
-      this.#token = response.access_token;
-      this.#expiresAt = Date.now() + Number(response.expires_in || 3600) * 1000;
-      this.#scheduleExpiry();
+      this.#accept(response);
     } catch (error) {
       this.status = previous;
       this.reconnecting = false;
@@ -90,6 +90,42 @@ class AuthStore {
     }
     this.status = "connected";
     this.reconnecting = false;
+  }
+
+  /** @param {import("../google/identity.js").TokenResponse} response */
+  #accept(response) {
+    this.#token = response.access_token;
+    this.#expiresAt = Date.now() + Number(response.expires_in || 3600) * 1000;
+    this.scopes = String(response.scope ?? "").split(" ").filter(Boolean);
+    this.#scheduleExpiry();
+  }
+
+  /** @param {string} scope */
+  hasScope(scope) {
+    return this.connected && this.scopes.includes(scope);
+  }
+
+  /**
+   * Asks the signed-in person for one more permission (for example Google Drive), keeping
+   * the ones already granted. Must run from a click, because Google shows a popup.
+   * @param {string} scope
+   */
+  async grant(scope) {
+    if (this.hasScope(scope)) return;
+    if (!this.connected) throw new SheetsAuthError("Connect Google first.");
+    const response = await requestAccessToken({
+      clientId: settings.clientId,
+      scopes: [...SCOPES, scope],
+      requiredScopes: [SHEETS_SCOPE, scope],
+      prompt: "",
+      loginHint: this.email,
+    });
+    const profile = await fetchProfile(response.access_token).catch(() => null);
+    if (profile && this.email && profile.email.toLowerCase() !== this.email.toLowerCase()) {
+      revokeAccessToken(response.access_token);
+      throw new Error(`Choose ${this.email} in Google's window to give Linework access.`);
+    }
+    this.#accept(response);
   }
 
   #scheduleExpiry() {
@@ -119,6 +155,7 @@ class AuthStore {
     this.#expiresAt = 0;
     this.email = "";
     this.name = "";
+    this.scopes = [];
     this.status = "signed-out";
   }
 }

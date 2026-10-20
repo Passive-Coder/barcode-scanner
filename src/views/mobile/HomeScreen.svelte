@@ -1,6 +1,8 @@
 <script>
   import { untrack } from "svelte";
   import { enter } from "$lib/motion.js";
+  import { pluralize } from "$lib/format.js";
+  import { alerts } from "$lib/stores/alerts.svelte.js";
   import { auth } from "$lib/stores/auth.svelte.js";
   import { mobileNav } from "$lib/stores/layout.svelte.js";
   import Ribbons from "../../components/brand/Ribbons.svelte";
@@ -31,6 +33,28 @@
         {#snippet art()}<SheetArt />{/snippet}
       </MenuCard>
     </div>
+
+    <ul class="more">
+      <li>
+        <button type="button" onclick={() => mobileNav.go("events")}>
+          <span class="text"><strong>Events</strong><span>People, sub-teams, documents, and alerts</span></span>
+          <span class="chevron" aria-hidden="true"></span>
+        </button>
+      </li>
+      <li>
+        <button type="button" onclick={() => mobileNav.go("teams")}>
+          <span class="text"><strong>Teams</strong><span>Your lists of people</span></span>
+          <span class="chevron" aria-hidden="true"></span>
+        </button>
+      </li>
+      <li>
+        <button type="button" onclick={() => (alerts.inboxOpen = true)}>
+          <span class="text"><strong>Alerts</strong><span>{alerts.unread ? `${pluralize(alerts.unread, "new alert")}` : "Pages and notices sent to you"}</span></span>
+          {#if alerts.unread}<span class="badge">{alerts.unread > 99 ? "99+" : alerts.unread}</span>{/if}
+          <span class="chevron" aria-hidden="true"></span>
+        </button>
+      </li>
+    </ul>
   </div>
   <Ribbons position="bottom" />
 </section>
@@ -80,5 +104,74 @@
   .menu {
     display: grid;
     gap: 12px;
+  }
+
+  .more {
+    margin: 16px 0 0;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    list-style: none;
+  }
+
+  .more li + li {
+    border-top: 1px solid var(--line);
+  }
+
+  .more button {
+    width: 100%;
+    min-height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    text-align: left;
+  }
+
+  .more button:hover,
+  .more button:active {
+    background: var(--surface-hover);
+  }
+
+  .more .text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .more strong {
+    font-size: 16px;
+    font-weight: 650;
+    color: var(--ink-strong);
+  }
+
+  .more .text span {
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+
+  .badge {
+    min-width: 22px;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: var(--danger);
+    color: var(--on-danger);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 22px;
+    text-align: center;
+  }
+
+  .chevron {
+    width: 8px;
+    height: 8px;
+    flex: none;
+    border-top: 2px solid var(--ink-muted);
+    border-right: 2px solid var(--ink-muted);
+    transform: rotate(45deg);
   }
 </style>

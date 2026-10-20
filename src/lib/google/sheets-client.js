@@ -10,9 +10,25 @@ const REQUEST_TIMEOUT_MS = 30_000;
  * @typedef {{ spreadsheetId: string, spreadsheetUrl?: string, properties?: { title?: string }, sheets?: Array<{ properties: SheetProperties }> }} SpreadsheetMetadata
  */
 
+/** The Google session lapsed. Used for every Google API, not only Sheets. */
 export class SheetsAuthError extends Error {
   name = "SheetsAuthError";
 }
+
+/**
+ * Google couldn't be reached or is overloaded (network failure, timeout, 429, or 5xx): the
+ * request may well work later, so changes can be stored and migrated instead of being lost.
+ */
+export class GoogleUnavailableError extends Error {
+  name = "GoogleUnavailableError";
+}
+
+/**
+ * Whether a failed write could succeed later without anything changing on the person's side
+ * except Google coming back or them reconnecting.
+ * @param {unknown} error
+ */
+export const isRetryable = (error) => error instanceof GoogleUnavailableError || error instanceof SheetsAuthError;
 
 /**
  * The signed-in account isn't allowed to do this to the spreadsheet: `view-only` when it can
@@ -77,8 +93,8 @@ export class SheetsClient {
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
     } catch (error) {
-      if (error instanceof DOMException && error.name === "TimeoutError") throw new Error("Google Sheets took too long to respond. Check your connection and try again.");
-      if (error instanceof TypeError) throw new Error("Could not reach Google Sheets. Check your connection and try again.");
+      if (error instanceof DOMException && error.name === "TimeoutError") throw new GoogleUnavailableError("Google Sheets took too long to respond. Check your connection and try again.");
+      if (error instanceof TypeError) throw new GoogleUnavailableError("Could not reach Google Sheets. Check your connection and try again.");
       throw error;
     }
 
@@ -95,7 +111,8 @@ export class SheetsClient {
       }
       if (response.status === 403) throw permissionError(detail, method);
       if (response.status === 404) throw new Error("Spreadsheet not found. Check the link and that this Google account can open it.");
-      if (response.status === 429) throw new Error("Google Sheets is rate limiting requests. Wait a moment and try again.");
+      if (response.status === 429) throw new GoogleUnavailableError("Google Sheets is rate limiting requests. Wait a moment and try again.");
+      if (response.status >= 500) throw new GoogleUnavailableError("Google Sheets is having trouble right now. Try again in a moment.");
       throw new Error(detail || `Google Sheets request failed (${response.status}).`);
     }
     return response.status === 204 ? {} : response.json();
@@ -135,10 +152,18 @@ export class SheetsClient {
 
   /** @param {string} id @param {string} title @param {CellValue[]} values */
   appendRow(id, title, values) {
+    return this.appendRows(id, title, [values]);
+  }
+
+  /**
+   * Adds rows after the last row of the tab's data, inserting new rows so nothing below is overwritten.
+   * @param {string} id @param {string} title @param {CellValue[][]} rows
+   */
+  appendRows(id, title, rows) {
     const range = `${quoteSheetName(title)}!A1`;
     return this.request(`/${encodeURIComponent(id)}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, {
       method: "POST",
-      body: { majorDimension: "ROWS", values: [values] },
+      body: { majorDimension: "ROWS", values: rows },
     });
   }
 

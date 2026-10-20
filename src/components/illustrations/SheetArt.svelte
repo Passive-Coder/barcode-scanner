@@ -21,7 +21,7 @@
     height: 132px;
     overflow: hidden;
     border-radius: 8px;
-    background: radial-gradient(circle at 50% 45%, #5a0b1b, #3f0611 75%);
+    background: #4a0714;
   }
 
   /* A spreadsheet page with a folded corner, like the Docs and Sheets icons. */

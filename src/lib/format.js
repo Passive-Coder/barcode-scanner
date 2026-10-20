@@ -3,6 +3,26 @@ const timeFormat = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute:
 /** @param {Date} date */
 export const formatTime = (date) => timeFormat.format(date);
 
+const dateTimeFormat = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+
+/** @param {Date} date */
+export const formatDateTime = (date) => dateTimeFormat.format(date);
+
+const relativeFormat = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
+
+/** "just now", "5 minutes ago", "yesterday", then a date. @param {number} timestamp @param {number} [now] */
+export function timeAgo(timestamp, now = Date.now()) {
+  const seconds = Math.round((timestamp - now) / 1000);
+  if (Math.abs(seconds) < 45) return "just now";
+  const minutes = Math.round(seconds / 60);
+  if (Math.abs(minutes) < 60) return relativeFormat.format(minutes, "minute");
+  const hours = Math.round(minutes / 60);
+  if (Math.abs(hours) < 24) return relativeFormat.format(hours, "hour");
+  const days = Math.round(hours / 24);
+  if (Math.abs(days) < 7) return relativeFormat.format(days, "day");
+  return formatDateTime(new Date(timestamp));
+}
+
 /** @param {number} value */
 export const pad2 = (value) => String(value).padStart(2, "0");
 

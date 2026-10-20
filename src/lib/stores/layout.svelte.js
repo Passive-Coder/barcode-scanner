@@ -6,9 +6,24 @@ import { auth } from "./auth.svelte.js";
 export const mobileLayout = new MediaQuery(MOBILE_QUERY);
 
 /**
- * @typedef {"welcome" | "home" | "choose" | "workspace" | "sheet-settings"} MobileView
+ * @typedef {"welcome" | "home" | "choose" | "workspace" | "sheet-settings" | "events" | "event" | "teams" | "team"} MobileView
  * @typedef {"scan" | "edit"} MobileIntent
+ * @typedef {"scanner" | "events" | "teams"} DesktopSection
  */
+
+/** The page sections of the desktop layout, chosen in the top bar. */
+class DesktopNavigation {
+  /** @type {DesktopSection} */
+  section = $state("scanner");
+
+  /** @param {DesktopSection} section */
+  go(section) {
+    this.section = section;
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }
+}
+
+export const desktopNav = new DesktopNavigation();
 
 /**
  * Navigation for the mobile flow: welcome → home → choose a sheet → scan or edit. While

@@ -1,5 +1,7 @@
 <script>
   import { addTab, deleteTab, renameTab } from "$lib/sheet-actions.js";
+  import { account } from "$lib/stores/account.svelte.js";
+  import { changeLog } from "$lib/stores/changes.svelte.js";
   import { workspace } from "$lib/stores/workspace.svelte.js";
   import Button from "../ui/Button.svelte";
 
@@ -17,6 +19,7 @@
     {/if}
   </div>
   <div class="actions">
+    <Button variant="quiet" disabled={!account.ready && !changeLog.local.length} title={account.ready ? undefined : "Needs Linework's server"} onclick={() => (changeLog.reviewOpen = true)}>Change log</Button>
     <Button variant="quiet" {disabled} onclick={addTab}>Add tab</Button>
     <Button variant="quiet" {disabled} onclick={renameTab}>Rename tab</Button>
     <Button variant="quiet" tone="danger" {disabled} onclick={deleteTab}>Delete tab</Button>

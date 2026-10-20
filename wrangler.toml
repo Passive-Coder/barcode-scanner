@@ -8,7 +8,26 @@ pattern = "linework.stucovitv.in"
 custom_domain = true
 
 # Static assets produced by `npm run build`. Caching and security headers live in public/_headers.
+# The Worker runs first so it can answer /api requests and redirect the legacy hostname.
 [assets]
 directory = "./dist"
 binding = "ASSETS"
 run_worker_first = true
+
+# Events, teams, alerts, push subscriptions, and the spreadsheet change log.
+[[d1_databases]]
+binding = "DB"
+database_name = "linework"
+database_id = "41d18bb4-1e92-4779-afc6-f2c05cdcc5ca"
+migrations_dir = "migrations"
+
+# Public values only. The VAPID private key is a secret:
+#   npx wrangler secret put VAPID_PRIVATE_KEY      (production)
+#   .dev.vars, written by scripts/generate-vapid-keys.mjs   (local development)
+[vars]
+# Sign-in tokens must be issued to this OAuth client; it matches VITE_GOOGLE_CLIENT_ID.
+GOOGLE_CLIENT_ID = "1045236525603-6r4t47890f4140119g8bd2729277ube6.apps.googleusercontent.com"
+# Browser origins allowed to make changes through the API (checked against the Origin header).
+APP_ORIGINS = "https://linework.stucovitv.in,http://localhost:3000"
+VAPID_PUBLIC_KEY = "BB9Mzv2uY1v-2L0kn1eM9-vC85tQeQywUxnWZUV5Fq6Rt0fXD1YMsrfuShUUMzlhIARO13UcBnag80ndsPiP7bA"
+VAPID_SUBJECT = "https://linework.stucovitv.in"

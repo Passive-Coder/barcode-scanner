@@ -1,4 +1,5 @@
 <script>
+  import { desktopNav } from "$lib/stores/layout.svelte.js";
   import { session } from "$lib/stores/session.svelte.js";
   import CapturePanel from "../../components/capture/CapturePanel.svelte";
   import HistoryList from "../../components/history/HistoryList.svelte";
@@ -6,7 +7,9 @@
   import Button from "../../components/ui/Button.svelte";
   import SectionHeading from "../../components/ui/SectionHeading.svelte";
   import SessionBanner from "../../components/ui/SessionBanner.svelte";
+  import EventsPage from "./EventsPage.svelte";
   import SheetsSection from "./SheetsSection.svelte";
+  import TeamsPage from "./TeamsPage.svelte";
   import Topbar from "./Topbar.svelte";
 </script>
 
@@ -15,6 +18,11 @@
   <main class="workspace">
     <SessionBanner />
 
+    {#if desktopNav.section === "events"}
+      <EventsPage />
+    {:else if desktopNav.section === "teams"}
+      <TeamsPage />
+    {:else}
     <div class="grid">
       <section aria-labelledby="capture-heading">
         <SectionHeading title="Scan" id="capture-heading" description="Use the camera or upload a photo of a barcode." />
@@ -36,6 +44,7 @@
       </SectionHeading>
       <HistoryList />
     </section>
+    {/if}
   </main>
   <footer class="footer">
     <a href="/privacy.html">Privacy policy</a>

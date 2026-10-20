@@ -1,14 +1,23 @@
 <script>
   import { attempt } from "$lib/feedback.js";
+  import { alerts } from "$lib/stores/alerts.svelte.js";
   import { auth } from "$lib/stores/auth.svelte.js";
   import { dialogs } from "$lib/stores/dialogs.svelte.js";
+  import { desktopNav } from "$lib/stores/layout.svelte.js";
   import { toast } from "$lib/stores/toast.svelte.js";
   import { workspace } from "$lib/stores/workspace.svelte.js";
   import BrandMark from "../../components/brand/BrandMark.svelte";
   import Button from "../../components/ui/Button.svelte";
 
+  const SECTIONS = /** @type {const} */ ([
+    { id: "scanner", label: "Scanner" },
+    { id: "events", label: "Events" },
+    { id: "teams", label: "Teams" },
+  ]);
+
   function signOut() {
     workspace.signOut();
+    desktopNav.go("scanner");
     toast.show("Signed out of Google");
   }
 </script>
@@ -18,7 +27,20 @@
     <BrandMark />
     <span class="brand-copy"><strong>stucovitv.in</strong><small>Linework barcode scanner</small></span>
   </a>
+  <nav class="sections" aria-label="Sections">
+    {#each SECTIONS as section (section.id)}
+      <button type="button" class={{ current: desktopNav.section === section.id }} aria-current={desktopNav.section === section.id ? "page" : undefined} onclick={() => desktopNav.go(section.id)}>
+        {section.label}
+      </button>
+    {/each}
+  </nav>
   <div class="right">
+    {#if auth.connected || auth.status === "expired"}
+      <button type="button" class="alerts" aria-label={alerts.unread ? `Alerts, ${alerts.unread} new` : "Alerts"} onclick={() => (alerts.inboxOpen = true)}>
+        Alerts
+        {#if alerts.unread}<span class="badge">{alerts.unread > 99 ? "99+" : alerts.unread}</span>{/if}
+      </button>
+    {/if}
     {#if auth.connected && auth.email}
       <span class="account">{auth.email}</span>
     {/if}
@@ -83,6 +105,55 @@
     color: var(--ink-muted);
   }
 
+  .sections {
+    display: flex;
+    align-self: stretch;
+    gap: 4px;
+    margin-right: auto;
+    margin-left: 28px;
+  }
+
+  .sections button,
+  .alerts {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--ink-muted);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .sections button:hover,
+  .alerts:hover {
+    color: var(--ink-strong);
+  }
+
+  .sections .current {
+    border-bottom-color: var(--accent);
+    color: var(--ink-strong);
+  }
+
+  .alerts {
+    min-height: 36px;
+    border: 1px solid var(--secondary-border);
+    border-radius: var(--radius-sm);
+  }
+
+  .badge {
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--danger);
+    color: var(--on-danger);
+    font-size: 12px;
+    line-height: 20px;
+    text-align: center;
+  }
+
   .right {
     display: flex;
     align-items: center;
@@ -99,9 +170,19 @@
     color: var(--ink-muted);
   }
 
-  @media (max-width: 900px) {
+  @media (max-width: 1100px) {
     .account {
       display: none;
+    }
+  }
+
+  @media (max-width: 860px) {
+    .brand-copy small {
+      display: none;
+    }
+
+    .sections {
+      margin-left: 12px;
     }
   }
 </style>

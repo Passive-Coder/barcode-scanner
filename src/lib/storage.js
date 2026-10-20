@@ -8,6 +8,10 @@ export const STORAGE_KEYS = Object.freeze({
   activeSpreadsheet: "linework-active-sheet",
   autoSave: "linework-auto-save",
   clientId: "linework-dedicated-google-client-id",
+  /** Spreadsheet changes waiting to reach Linework's server, per Google account. */
+  outbox: "linework-change-outbox",
+  /** Migration results the server hasn't confirmed yet. */
+  unsentResults: "linework-unsent-migration-results",
 });
 
 /** @param {string} key */

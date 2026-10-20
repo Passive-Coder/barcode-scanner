@@ -30,7 +30,7 @@
     height: 132px;
     overflow: hidden;
     border-radius: 8px;
-    background: radial-gradient(circle at 50% 45%, #5a0b1b, #3f0611 75%);
+    background: #4a0714;
   }
 
   .finder {
@@ -113,7 +113,6 @@
     height: 2px;
     border-radius: 2px;
     background: #ffc2ae;
-    box-shadow: 0 0 10px 2px #ff9c84aa;
     opacity: 0;
   }
 

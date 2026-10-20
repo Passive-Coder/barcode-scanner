@@ -3,6 +3,9 @@
   import { auth } from "$lib/stores/auth.svelte.js";
   import { camera } from "$lib/stores/camera.svelte.js";
   import { mobileLayout } from "$lib/stores/layout.svelte.js";
+  import AlertOverlay from "./components/alerts/AlertOverlay.svelte";
+  import AlertsDialog from "./components/alerts/AlertsDialog.svelte";
+  import ChangesDialog from "./components/changes/ChangesDialog.svelte";
   import SettingsDialog from "./components/settings/SettingsDialog.svelte";
   import ConfirmDialog from "./components/ui/ConfirmDialog.svelte";
   import FormDialog from "./components/ui/FormDialog.svelte";
@@ -30,6 +33,10 @@
 {/if}
 
 <SettingsDialog />
+<AlertsDialog />
+<ChangesDialog />
 <ConfirmDialog />
 <FormDialog />
 <Toast />
+<!-- Last, so a page shows above every other dialog. -->
+<AlertOverlay />

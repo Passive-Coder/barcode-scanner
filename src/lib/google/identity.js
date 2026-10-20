@@ -53,13 +53,24 @@ export async function requestAccessToken({ clientId, scopes, requiredScopes, pro
     const client = oauth2.initTokenClient({
       client_id: clientId,
       scope: scopes.join(" "),
+      // Keep permissions granted earlier (such as Drive) in every new token.
+      include_granted_scopes: true,
       login_hint: loginHint || undefined,
       /** @param {any} result */
       callback: (result) => {
         if (result?.error || !result?.access_token) {
           finish(() => reject(new Error(result?.error_description || result?.error || "Google sign-in was cancelled.")));
         } else if (!requiredScopes.every((scope) => oauth2.hasGrantedAllScopes(result, scope))) {
-          finish(() => reject(new Error("Google Sheets access was not granted. Sign in again and allow access to your spreadsheets.")));
+          const missing = requiredScopes.find((scope) => !oauth2.hasGrantedAllScopes(result, scope)) ?? "";
+          finish(() =>
+            reject(
+              new Error(
+                /drive/.test(missing)
+                  ? "Google Drive access was not granted. Try again and allow Linework to create and share files in your Drive."
+                  : "Google Sheets access was not granted. Sign in again and allow access to your spreadsheets.",
+              ),
+            ),
+          );
         } else {
           finish(() => resolve(result));
         }

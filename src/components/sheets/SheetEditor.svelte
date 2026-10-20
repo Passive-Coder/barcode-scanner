@@ -1,5 +1,6 @@
 <script>
   import { workspace } from "$lib/stores/workspace.svelte.js";
+  import PendingChanges from "../changes/PendingChanges.svelte";
   import ColumnMapping from "./ColumnMapping.svelte";
   import DataTable from "./DataTable.svelte";
   import StructureBar from "./StructureBar.svelte";
@@ -16,6 +17,7 @@
 {#if workspace.tab}
   <div class="editor">
     <ViewOnlyNotice />
+    <PendingChanges />
     {#if showStructure}<StructureBar />{/if}
     {#if showMapping}<ColumnMapping />{/if}
     {#if showData}<DataTable />{/if}

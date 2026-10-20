@@ -13,7 +13,8 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: { $lib: fileURLToPath(new URL("./src/lib", import.meta.url)) },
     },
-    server: { port, strictPort: true },
+    // /api is answered by the Worker under `wrangler dev` (see scripts/dev.mjs).
+    server: { port, strictPort: true, proxy: { "/api": { target: `http://localhost:${Number(env.API_PORT) || 8787}` } } },
     preview: { port, strictPort: true },
     build: { target: "es2022" },
     // The zxing-wasm decoder runs in a module worker.
