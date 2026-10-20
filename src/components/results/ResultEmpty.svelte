@@ -1,4 +1,9 @@
-<div class="empty">
+<script>
+  /** @type {{ compact?: boolean }} */
+  let { compact = false } = $props();
+</script>
+
+<div class={["empty", compact && "compact"]}>
   <strong>No scans yet</strong>
   <span>Scan a barcode to see its value and the fields inside it.</span>
 </div>
@@ -16,6 +21,10 @@
     border-radius: var(--radius);
     background: var(--surface);
     text-align: center;
+  }
+
+  .compact {
+    padding: 18px 20px;
   }
 
   strong {

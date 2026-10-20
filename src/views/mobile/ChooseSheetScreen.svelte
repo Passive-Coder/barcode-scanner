@@ -6,7 +6,7 @@
   import { workspace } from "$lib/stores/workspace.svelte.js";
   import SheetLinkForm from "../../components/sheets/SheetLinkForm.svelte";
   import SessionBanner from "../../components/ui/SessionBanner.svelte";
-  import BackButton from "./BackButton.svelte";
+  import MobileBar from "./MobileBar.svelte";
 
   const scanning = $derived(mobileNav.intent === "scan");
   /** @type {string | null} */
@@ -26,10 +26,7 @@
 </script>
 
 <section class="choose" aria-labelledby="choose-title" {@attach enter({ y: 14, duration: 0.45 })}>
-  <header>
-    <BackButton label="Back to home" onclick={() => mobileNav.go("home")} />
-    <h1 id="choose-title">{scanning ? "Scan into a sheet" : "Edit a sheet"}</h1>
-  </header>
+  <MobileBar id="choose-title" title={scanning ? "Scan into a sheet" : "Edit a sheet"} backLabel="Back to home" onback={() => mobileNav.go("home")} />
 
   <SessionBanner />
 
@@ -61,20 +58,7 @@
     max-width: 560px;
     min-height: 100svh;
     margin: auto;
-    padding: calc(20px + var(--safe-top)) 20px calc(28px + var(--safe-bottom));
-  }
-
-  header {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 24px;
-  }
-
-  h1 {
-    font-size: 26px;
-    font-weight: 700;
-    letter-spacing: -0.025em;
+    padding: 0 20px calc(28px + var(--safe-bottom));
   }
 
   .choose > :global(.banner) {

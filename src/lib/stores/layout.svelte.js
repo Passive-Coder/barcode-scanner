@@ -6,11 +6,14 @@ import { auth } from "./auth.svelte.js";
 export const mobileLayout = new MediaQuery(MOBILE_QUERY);
 
 /**
- * @typedef {"welcome" | "home" | "choose" | "workspace"} MobileView
+ * @typedef {"welcome" | "home" | "choose" | "workspace" | "sheet-settings"} MobileView
  * @typedef {"scan" | "edit"} MobileIntent
  */
 
-/** Navigation for the mobile flow: welcome → home → choose a sheet → scan or edit. */
+/**
+ * Navigation for the mobile flow: welcome → home → choose a sheet → scan or edit. While
+ * scanning, the sheet's settings (spreadsheet, tab, column mapping) live on their own page.
+ */
 class MobileNavigation {
   /** @type {MobileView} */
   view = $state("welcome");
@@ -18,6 +21,14 @@ class MobileNavigation {
   intent = $state("scan");
   /** True while the sign-in animation plays over the home screen. */
   revealing = $state(false);
+
+  /**
+   * The header logo turns into a barcode while the person is in the scanner.
+   * @type {"mark" | "barcode"}
+   */
+  logoStyle = $derived(
+    (this.view === "workspace" && this.intent === "scan") || this.view === "sheet-settings" ? "barcode" : "mark",
+  );
 
   /** @param {MobileView} view */
   go(view) {

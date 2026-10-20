@@ -2,8 +2,9 @@
   import { toast } from "$lib/stores/toast.svelte.js";
   import Button from "../ui/Button.svelte";
 
-  /** @type {{ text: string, link: string | null }} */
-  let { text, link } = $props();
+  /** `clamp` limits the value to three lines, for the compact scanner. */
+  /** @type {{ text: string, link: string | null, clamp?: boolean }} */
+  let { text, link, clamp = false } = $props();
 
   async function copy() {
     try {
@@ -16,7 +17,7 @@
 </script>
 
 <div class="payload">
-  <div class="value">{text || "(empty payload)"}</div>
+  <div class={["value", clamp && "clamp"]}>{text || "(empty payload)"}</div>
   <div class="actions">
     <Button variant="quiet" onclick={copy}>Copy</Button>
     <!-- `link` is only ever an http(s) URL parsed by analyzeScan, never javascript: or data:. -->
@@ -42,6 +43,14 @@
     color: var(--ink-strong);
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+  }
+
+  .value.clamp {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
   }
 
   .actions {

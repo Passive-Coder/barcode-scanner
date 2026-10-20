@@ -5,17 +5,17 @@
   import StructureBar from "./StructureBar.svelte";
 
   /**
-   * The open tab's structure, column mapping, and data. The mobile scan screen shows only
-   * the mapping; everywhere else shows all three.
-   * @type {{ showStructure?: boolean, showData?: boolean }}
+   * The open tab's structure, column mapping, and data. Each part can be left out: the mobile
+   * Sheet settings page shows only the mapping, and the mobile editor leaves the mapping out.
+   * @type {{ showStructure?: boolean, showMapping?: boolean, showData?: boolean }}
    */
-  let { showStructure = true, showData = true } = $props();
+  let { showStructure = true, showMapping = true, showData = true } = $props();
 </script>
 
 {#if workspace.tab}
   <div class="editor">
     {#if showStructure}<StructureBar />{/if}
-    <ColumnMapping />
+    {#if showMapping}<ColumnMapping />{/if}
     {#if showData}<DataTable />{/if}
   </div>
 {/if}

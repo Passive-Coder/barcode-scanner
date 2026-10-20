@@ -8,8 +8,16 @@
   import PayloadBlock from "./PayloadBlock.svelte";
   import RecordingStatus from "./RecordingStatus.svelte";
 
-  /** @type {{ scan: import("$lib/stores/session.svelte.js").Scan }} */
-  let { scan } = $props();
+  /**
+   * `compact` (the mobile scanner) shows the value and at most three key fields, with
+   * everything else one tap away, so the camera and result fit on one screen.
+   * @type {{ scan: import("$lib/stores/session.svelte.js").Scan, compact?: boolean }}
+   */
+  let { scan, compact = false } = $props();
+
+  /** Metadata every scan has; compact mode highlights what the payload itself contains. */
+  const METADATA_KEYS = new Set(["raw", "format", "contentType", "byteSize", "scannedAt"]);
+  const COMPACT_LIMIT = 3;
 
   let showAll = $state(false);
 
@@ -18,6 +26,7 @@
   const selectedFields = $derived(analysis.fields.filter((field) => workspace.mappedKeys.has(field.key)));
   /** With columns mapped, the result focuses on the fields that will be written. */
   const focused = $derived(mapped && !showAll);
+  const highlights = $derived((mapped ? selectedFields : analysis.fields.filter((field) => !METADATA_KEYS.has(field.key))).slice(0, COMPACT_LIMIT));
   const details = $derived(
     /** @type {Array<[string, string]>} */ ([
       ["Content", analysis.contentType],
@@ -29,31 +38,50 @@
   );
 </script>
 
-<article class="result" aria-label="Latest scan" {@attach enter({ y: 10, duration: 0.35, ease: "power2.out" })}>
+<article class={["result", compact && "compact"]} aria-label="Latest scan" {@attach enter({ y: 10, duration: 0.35, ease: "power2.out" })}>
   <header>
     <h3>{scan.format}</h3>
     <span class="muted">{analysis.contentType} · {formatTime(scan.time)}</span>
   </header>
 
-  {#if !focused}
-    <PayloadBlock text={scan.text} link={analysis.link} />
-  {/if}
-
-  <RecordingStatus />
-
-  <div class="fields-heading">
-    <h4>{focused ? "Mapped fields" : "Fields"}</h4>
-    <span class="muted">{focused ? `${selectedFields.length} in this scan` : pluralize(analysis.fields.length, "field")}</span>
-  </div>
-  <FieldList fields={focused ? selectedFields : analysis.fields} emptyMessage="This barcode contains none of the mapped fields." />
-
-  {#if focused}
-    <Button variant="quiet" class="toggle" onclick={() => (showAll = true)}>Show everything in this scan</Button>
+  {#if compact}
+    <PayloadBlock text={scan.text} link={analysis.link} clamp={!showAll} />
+    {#if showAll}
+      <div class="fields-heading">
+        <h4>Fields</h4>
+        <span class="muted">{pluralize(analysis.fields.length, "field")}</span>
+      </div>
+      <FieldList fields={analysis.fields} emptyMessage="" />
+      <h4 class="details-heading">Details</h4>
+      <DetailsList rows={details} />
+      <Button variant="quiet" class="toggle" onclick={() => (showAll = false)}>Show less</Button>
+    {:else}
+      {#if highlights.length}
+        <div class="highlights"><FieldList fields={highlights} emptyMessage="" dense /></div>
+      {/if}
+      <Button variant="quiet" class="toggle" onclick={() => (showAll = true)}>Show all {pluralize(analysis.fields.length, "field")} and details</Button>
+    {/if}
   {:else}
-    <h4 class="details-heading">Details</h4>
-    <DetailsList rows={details} />
-    {#if mapped}
-      <Button variant="quiet" class="toggle" onclick={() => (showAll = false)}>Show mapped fields only</Button>
+    {#if !focused}
+      <PayloadBlock text={scan.text} link={analysis.link} />
+    {/if}
+
+    <RecordingStatus />
+
+    <div class="fields-heading">
+      <h4>{focused ? "Mapped fields" : "Fields"}</h4>
+      <span class="muted">{focused ? `${selectedFields.length} in this scan` : pluralize(analysis.fields.length, "field")}</span>
+    </div>
+    <FieldList fields={focused ? selectedFields : analysis.fields} emptyMessage="This barcode contains none of the mapped fields." />
+
+    {#if focused}
+      <Button variant="quiet" class="toggle" onclick={() => (showAll = true)}>Show everything in this scan</Button>
+    {:else}
+      <h4 class="details-heading">Details</h4>
+      <DetailsList rows={details} />
+      {#if mapped}
+        <Button variant="quiet" class="toggle" onclick={() => (showAll = false)}>Show mapped fields only</Button>
+      {/if}
     {/if}
   {/if}
 </article>
@@ -104,6 +132,31 @@
 
   .result :global(.toggle) {
     margin-top: 10px;
+  }
+
+  .highlights {
+    margin-top: 12px;
+  }
+
+  .compact {
+    padding: 14px 16px 10px;
+  }
+
+  .compact header {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .compact h3 {
+    font-size: 19px;
+  }
+
+  .compact header span {
+    font-size: 13px;
+    text-align: right;
   }
 
   @media (max-width: 700px) {

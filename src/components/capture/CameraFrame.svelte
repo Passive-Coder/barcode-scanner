@@ -18,7 +18,7 @@
   // and nothing is cropped away; the scanner decodes that entire image too.
   const liveRatio = $derived(camera.live && camera.aspectRatio ? camera.aspectRatio : null);
   // A tall feed is narrowed rather than letterboxed, so it keeps its shape within the height cap.
-  const liveWidth = $derived(liveRatio ? `min(100%, calc(72svh * ${liveRatio}))` : undefined);
+  const liveWidth = $derived(liveRatio ? `min(100%, calc(var(--frame-max-height) * ${liveRatio}))` : undefined);
 </script>
 
 <div class={["frame", camera.live && "live"]} style:aspect-ratio={liveRatio ? String(liveRatio) : undefined} style:width={liveWidth}>
@@ -33,9 +33,10 @@
 
 <style>
   .frame {
+    --frame-max-height: 72svh;
     position: relative;
     aspect-ratio: 16 / 10;
-    max-height: 72svh;
+    max-height: var(--frame-max-height);
     margin: 0 auto;
     overflow: hidden;
     border-radius: var(--radius);
@@ -83,11 +84,15 @@
     color: var(--camera-muted);
   }
 
+  /* On phones the frame stays short enough to leave the latest scan in view. */
   @media (max-width: 700px) {
+    .frame {
+      --frame-max-height: 46svh;
+    }
+
     .frame:not(.live) {
-      aspect-ratio: 4 / 5;
+      aspect-ratio: 16 / 10;
       min-height: 0;
-      max-height: 62svh;
     }
   }
 </style>

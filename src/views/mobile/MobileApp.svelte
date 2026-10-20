@@ -4,8 +4,10 @@
   import { mobileNav } from "$lib/stores/layout.svelte.js";
   import AccountDialog from "../../components/settings/AccountDialog.svelte";
   import ChooseSheetScreen from "./ChooseSheetScreen.svelte";
+  import HeaderLogo from "./HeaderLogo.svelte";
   import HomeScreen from "./HomeScreen.svelte";
   import RevealOverlay from "./RevealOverlay.svelte";
+  import SheetSettingsScreen from "./SheetSettingsScreen.svelte";
   import WelcomeScreen from "./WelcomeScreen.svelte";
   import WorkspaceScreen from "./WorkspaceScreen.svelte";
 
@@ -26,10 +28,17 @@
     <HomeScreen />
   {:else if mobileNav.view === "choose"}
     <ChooseSheetScreen />
+  {:else if mobileNav.view === "sheet-settings"}
+    <SheetSettingsScreen />
   {:else}
     <WorkspaceScreen />
   {/if}
 </div>
+
+<!-- Outside the screens so it persists between them and can morph mark ⇄ barcode. -->
+{#if mobileNav.view !== "welcome"}
+  <HeaderLogo style={mobileNav.logoStyle} hidden={mobileNav.revealing} />
+{/if}
 
 {#if mobileNav.revealing}
   <RevealOverlay onswap={() => mobileNav.go("home")} ondone={() => (mobileNav.revealing = false)} />

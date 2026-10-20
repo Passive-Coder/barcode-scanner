@@ -2,9 +2,7 @@
   import { untrack } from "svelte";
   import { enter } from "$lib/motion.js";
   import { auth } from "$lib/stores/auth.svelte.js";
-  import { dialogs } from "$lib/stores/dialogs.svelte.js";
   import { mobileNav } from "$lib/stores/layout.svelte.js";
-  import CouncilMark from "../../components/brand/CouncilMark.svelte";
   import Ribbons from "../../components/brand/Ribbons.svelte";
   import ScanArt from "../../components/illustrations/ScanArt.svelte";
   import SheetArt from "../../components/illustrations/SheetArt.svelte";
@@ -17,11 +15,9 @@
 
 <section class="home" aria-labelledby="home-title">
   <div class="inner" {@attach intro}>
+    <!-- The account logo is pinned in the corner by MobileApp (HeaderLogo). -->
     <header>
       <h1 id="home-title">Hi {auth.displayName}</h1>
-      <button class={["logo", mobileNav.revealing && "hidden"]} type="button" aria-label="Account" data-reveal-target onclick={() => (dialogs.accountOpen = true)}>
-        <CouncilMark />
-      </button>
     </header>
 
     <SessionBanner />
@@ -52,15 +48,16 @@
   .inner {
     max-width: 560px;
     margin: auto;
-    padding: calc(24px + var(--safe-top)) 20px 24px;
+    padding: var(--safe-top) 20px 24px;
   }
 
+  /* Same height as the other screens' top bar, so the pinned logo lines up with the greeting. */
   header {
+    min-height: 72px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 24px;
+    padding-right: 58px;
+    margin-bottom: 12px;
   }
 
   h1 {
@@ -68,30 +65,6 @@
     font-weight: 700;
     letter-spacing: -0.025em;
     overflow-wrap: anywhere;
-  }
-
-  .logo {
-    width: 52px;
-    height: 52px;
-    flex: none;
-    display: grid;
-    place-items: center;
-    padding: 6px;
-    border: 1px solid var(--line-strong);
-    border-radius: 50%;
-    background: transparent;
-    color: var(--ink);
-    /* No opacity transition: the reveal hands off to this logo in place, with no fade. */
-    transition: background 0.2s;
-  }
-
-  .logo:hover,
-  .logo:active {
-    background: var(--surface-hover);
-  }
-
-  .logo.hidden {
-    opacity: 0;
   }
 
   .inner > :global(.banner) {

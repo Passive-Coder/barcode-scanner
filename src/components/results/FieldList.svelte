@@ -1,19 +1,22 @@
 <script>
   import { enter } from "$lib/motion.js";
 
-  /** @type {{ fields: import("$lib/barcode/fields.js").ScanField[], emptyMessage: string }} */
-  let { fields, emptyMessage } = $props();
+  /**
+   * `dense` shows each field on one line (label and value only), for the compact scanner.
+   * @type {{ fields: import("$lib/barcode/fields.js").ScanField[], emptyMessage: string, dense?: boolean }}
+   */
+  let { fields, emptyMessage, dense = false } = $props();
 </script>
 
 {#if fields.length}
-  <dl class="list" {@attach enter({ x: 10, y: 0, duration: 0.4, stagger: 0.035, children: true, ease: "power2.out" })}>
+  <dl class={["list", dense && "dense"]} {@attach enter({ x: 10, y: 0, duration: 0.4, stagger: 0.035, children: true, ease: "power2.out" })}>
     {#each fields as field (field.key)}
       <div class="row">
         <dt>
           <strong>{field.label}</strong>
-          <code>{field.key}</code>
+          {#if !dense}<code>{field.key}</code>{/if}
         </dt>
-        <dd class="type"><span>{field.type}</span></dd>
+        {#if !dense}<dd class="type"><span>{field.type}</span></dd>{/if}
         <dd class="value">{field.value || "—"}</dd>
       </div>
     {/each}
@@ -96,5 +99,21 @@
       grid-column: 1 / -1;
       text-align: left;
     }
+  }
+
+  /* One line per field: label on the left, value on the right. */
+  .dense .row {
+    grid-template-columns: minmax(70px, auto) minmax(0, 1fr);
+    align-items: baseline;
+    gap: 12px;
+    padding: 7px 0;
+  }
+
+  .dense .value {
+    grid-column: auto;
+    overflow: hidden;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 </style>
