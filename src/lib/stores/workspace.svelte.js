@@ -1,5 +1,6 @@
 import { errorMessage, pluralize } from "../format.js";
-import { SheetsClient } from "../google/sheets-client.js";
+import { SvelteSet } from "svelte/reactivity";
+import { SheetsClient, SheetsPermissionError } from "../google/sheets-client.js";
 import { columnLetter, fieldToCell, parseSpreadsheetId, textToCell } from "../sheets/values.js";
 import { STORAGE_KEYS, readJson, readString, writeJson, writeString } from "../storage.js";
 import { auth } from "./auth.svelte.js";
@@ -14,6 +15,8 @@ import { toast } from "./toast.svelte.js";
  */
 
 const api = new SheetsClient({ getToken: () => auth.token(), onUnauthorized: () => auth.expire() });
+
+const VIEW_ONLY_MESSAGE = "This Google account can only view this spreadsheet. Sign in as the owner to make changes.";
 
 /** @param {unknown} value */
 const isLinkList = (value) => Array.isArray(value) && value.every((link) => typeof link?.id === "string" && typeof link?.title === "string");
@@ -45,6 +48,8 @@ class WorkspaceStore {
   status = $state.raw({ message: "", error: false });
   /** @type {{ ok: boolean, at: Date, message: string } | null} */
   lastSave = $state.raw(null);
+  /** Spreadsheets Google has refused to let this account edit, this session. */
+  viewOnlyIds = new SvelteSet();
   #loadSequence = 0;
   #saveQueue = Promise.resolve();
 
@@ -64,10 +69,16 @@ class WorkspaceStore {
   /** Field keys mapped to any column of the open tab. */
   mappedKeys = $derived(new Set(Object.values(this.mapping)));
 
+  /** The open spreadsheet is shared with this account as view-only. */
+  readOnly = $derived(Boolean(this.activeId) && this.viewOnlyIds.has(this.activeId));
+  /** Whether edit controls should be enabled. */
+  canEdit = $derived(auth.connected && !this.loading && !this.readOnly);
+
   /** Whether new scans will be written, and if not, what the person needs to do. */
   recording = $derived.by(() => {
     if (auth.status === "expired") return { active: false, reason: "Google session expired. Reconnect to keep recording scans." };
     if (!auth.connected) return { active: false, reason: "Connect Google to record scans in a spreadsheet." };
+    if (this.readOnly) return { active: false, reason: "This account can only view the spreadsheet, so scans can't be saved. Sign in as the owner." };
     if (!this.tab) return { active: false, reason: "Choose a spreadsheet tab to record scans." };
     if (!this.mappedCount) return { active: false, reason: "Map at least one column to a barcode field to record scans." };
     if (!this.autoSave) return { active: false, reason: "Automatic recording is paused." };
@@ -100,9 +111,30 @@ class WorkspaceStore {
   }
 
   #requireTab() {
-    this.#requireConnection();
+    this.#requireEditable();
     if (!this.tab) throw new Error("Choose a spreadsheet tab first.");
     return { id: this.activeId, tab: this.tab };
+  }
+
+  #requireEditable() {
+    this.#requireConnection();
+    if (this.readOnly) throw new SheetsPermissionError(VIEW_ONLY_MESSAGE, "view-only");
+  }
+
+  /**
+   * Runs a write. If Google says this account can only view the spreadsheet, it's marked
+   * view-only so the UI can stop offering edits instead of failing again and again.
+   * @template T
+   * @param {string} id
+   * @param {() => Promise<T>} task
+   */
+  async #write(id, task) {
+    try {
+      return await task();
+    } catch (error) {
+      if (error instanceof SheetsPermissionError && error.access === "view-only") this.viewOnlyIds.add(id);
+      throw error;
+    }
   }
 
   /** @param {number} rowCount */
@@ -110,10 +142,16 @@ class WorkspaceStore {
     return this.tab ? `“${this.tab.title}” · ${pluralize(Math.max(0, rowCount - 1), "data row")} loaded` : "This spreadsheet has no tabs.";
   }
 
-  /** Signs in, then reopens the last spreadsheet so the workspace is ready. */
+  /**
+   * Signs in, then reopens the last spreadsheet so the workspace is ready. Calling it while
+   * signed in opens Google's account chooser, which is how someone switches to the
+   * spreadsheet owner's account.
+   */
   async connect() {
     await auth.connect();
-    toast.show("Google connected");
+    // A different account may have different access to the same spreadsheets.
+    this.viewOnlyIds.clear();
+    toast.show(auth.email ? `Signed in as ${auth.email}` : "Google connected");
     if (this.activeId) {
       await this.open(this.activeId).catch((error) => this.setStatus(errorMessage(error), true));
     }
@@ -121,6 +159,7 @@ class WorkspaceStore {
 
   signOut() {
     auth.disconnect();
+    this.viewOnlyIds.clear();
     this.metadata = null;
     this.sheetId = null;
     this.rows = [];
@@ -220,7 +259,9 @@ class WorkspaceStore {
     }
   }
 
+  /** Reloads the spreadsheet and forgets any earlier refusal, in case access has changed since. */
   refresh() {
+    this.viewOnlyIds.delete(this.activeId);
     return this.open(this.activeId, this.sheetId);
   }
 
@@ -257,9 +298,9 @@ class WorkspaceStore {
 
   /** @param {string} title */
   async addTab(title) {
-    this.#requireConnection();
+    this.#requireEditable();
     const id = this.activeId;
-    const sheetId = await api.addSheet(id, title);
+    const sheetId = await this.#write(id, () => api.addSheet(id, title));
     await this.open(id, sheetId ?? this.sheetId);
     toast.show("Tab added");
   }
@@ -267,7 +308,7 @@ class WorkspaceStore {
   /** @param {string} title */
   async renameTab(title) {
     const { id, tab } = this.#requireTab();
-    await api.renameSheet(id, tab.sheetId, title);
+    await this.#write(id, () => api.renameSheet(id, tab.sheetId, title));
     await this.open(id, tab.sheetId);
     toast.show("Tab renamed");
   }
@@ -275,7 +316,7 @@ class WorkspaceStore {
   async deleteTab() {
     const { id, tab } = this.#requireTab();
     if (this.tabs.length <= 1) throw new Error("A spreadsheet must keep at least one tab.");
-    await api.deleteSheet(id, tab.sheetId);
+    await this.#write(id, () => api.deleteSheet(id, tab.sheetId));
     delete this.mappings[`${id}:${tab.sheetId}`];
     this.#persistMappings();
     await this.open(id, this.tabs.find((item) => item.sheetId !== tab.sheetId)?.sheetId ?? null);
@@ -286,8 +327,10 @@ class WorkspaceStore {
   async addColumn(heading) {
     const { id, tab } = this.#requireTab();
     const index = this.columnCount;
-    if (index >= (tab.gridProperties?.columnCount ?? Infinity)) await api.appendColumn(id, tab.sheetId);
-    await api.updateCells(id, tab.title, [{ row: 1, column: index, value: heading }]);
+    await this.#write(id, async () => {
+      if (index >= (tab.gridProperties?.columnCount ?? Infinity)) await api.appendColumn(id, tab.sheetId);
+      await api.updateCells(id, tab.title, [{ row: 1, column: index, value: heading }]);
+    });
     // The grid size changed, so reload metadata as well as rows.
     await this.open(id, tab.sheetId);
     toast.show("Column added");
@@ -296,7 +339,7 @@ class WorkspaceStore {
   /** @param {number} index @param {string} heading */
   async renameColumn(index, heading) {
     const { id, tab } = this.#requireTab();
-    await api.updateCells(id, tab.title, [{ row: 1, column: index, value: heading }]);
+    await this.#write(id, () => api.updateCells(id, tab.title, [{ row: 1, column: index, value: heading }]));
     await this.#reloadRows(id, tab.sheetId);
     toast.show("Column renamed");
   }
@@ -304,7 +347,7 @@ class WorkspaceStore {
   /** @param {number} index */
   async deleteColumn(index) {
     const { id, tab } = this.#requireTab();
-    await api.deleteColumn(id, tab.sheetId, index);
+    await this.#write(id, () => api.deleteColumn(id, tab.sheetId, index));
     // Columns to the right shift left, so their mappings move with them.
     /** @type {ColumnMapping} */
     const next = {};
@@ -331,10 +374,10 @@ class WorkspaceStore {
       const current = this.rows[rowNumber - 1] ?? [];
       const cells = values.flatMap((value, column) => (value === (current[column] ?? "") ? [] : [{ row: rowNumber, column, value: textToCell(value) }]));
       if (!cells.length) return;
-      await api.updateCells(id, tab.title, cells);
+      await this.#write(id, () => api.updateCells(id, tab.title, cells));
     } else {
       if (!values.some((value) => value.trim())) throw new Error("Enter at least one value.");
-      await api.appendRow(id, tab.title, values.map(textToCell));
+      await this.#write(id, () => api.appendRow(id, tab.title, values.map(textToCell)));
     }
     await this.#reloadRows(id, tab.sheetId);
     toast.show(rowNumber ? `Row ${rowNumber} updated` : "Row added");
@@ -343,7 +386,7 @@ class WorkspaceStore {
   /** @param {number} rowNumber 1-based sheet row */
   async deleteRow(rowNumber) {
     const { id, tab } = this.#requireTab();
-    await api.deleteRow(id, tab.sheetId, rowNumber);
+    await this.#write(id, () => api.deleteRow(id, tab.sheetId, rowNumber));
     await this.#reloadRows(id, tab.sheetId);
     toast.show(`Row ${rowNumber} deleted`);
   }
@@ -368,7 +411,7 @@ class WorkspaceStore {
     this.pendingSaves++;
     this.#saveQueue = this.#saveQueue.then(async () => {
       try {
-        await api.appendRow(id, tab.title, values);
+        await this.#write(id, () => api.appendRow(id, tab.title, values));
         this.lastSave = { ok: true, at: new Date(), message: `Saved to “${tab.title}”` };
         toast.show("Scan saved to Google Sheets");
       } catch (error) {

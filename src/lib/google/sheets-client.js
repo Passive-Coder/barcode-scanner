@@ -14,6 +14,42 @@ export class SheetsAuthError extends Error {
   name = "SheetsAuthError";
 }
 
+/**
+ * The signed-in account isn't allowed to do this to the spreadsheet: `view-only` when it can
+ * read but not edit (a Viewer or Commenter), `no-access` when it can't open it at all.
+ */
+export class SheetsPermissionError extends Error {
+  name = "SheetsPermissionError";
+
+  /** @param {string} message @param {"view-only" | "no-access"} access */
+  constructor(message, access) {
+    super(message);
+    this.access = access;
+  }
+}
+
+/**
+ * Turns a 403 from the Sheets API into an error a person can act on. Google's own text
+ * ("The caller does not have permission") doesn't say what to do about it.
+ * @param {string} detail Google's error message
+ * @param {string} method HTTP method of the failed request
+ */
+export function permissionError(detail, method) {
+  if (/insufficient authentication scopes/i.test(detail)) {
+    return new Error("Linework isn't allowed to use your Google Sheets. Sign out, sign in again, and allow access to your spreadsheets.");
+  }
+  if (/protected/i.test(detail)) {
+    return new Error("That part of the sheet is protected. Ask the spreadsheet's owner to remove the protection or let you edit it.");
+  }
+  if (/API has not been used|is disabled|SERVICE_DISABLED/i.test(detail)) {
+    return new Error("The Google Sheets API isn't enabled for this app's Google Cloud project.");
+  }
+  if (method === "GET") {
+    return new SheetsPermissionError("This Google account can't open this spreadsheet. Sign in with the Google account that owns it.", "no-access");
+  }
+  return new SheetsPermissionError("This Google account can only view this spreadsheet. Sign in as the owner to make changes.", "view-only");
+}
+
 /** Google Sheets REST client. Every request asks the auth layer for a live token. */
 export class SheetsClient {
   /**
@@ -57,7 +93,7 @@ export class SheetsClient {
         this.onUnauthorized();
         throw new SheetsAuthError("Your Google session expired. Reconnect Google to continue.");
       }
-      if (response.status === 403) throw new Error(detail || "Google denied access. Check the signed-in account, the Sheets API, and the spreadsheet's sharing settings.");
+      if (response.status === 403) throw permissionError(detail, method);
       if (response.status === 404) throw new Error("Spreadsheet not found. Check the link and that this Google account can open it.");
       if (response.status === 429) throw new Error("Google Sheets is rate limiting requests. Wait a moment and try again.");
       throw new Error(detail || `Google Sheets request failed (${response.status}).`);

@@ -23,6 +23,8 @@ class AuthStore {
   status = $state("signed-out");
   email = $state("");
   name = $state("");
+  /** True while an expired session signs back in to the same account. */
+  reconnecting = $state(false);
   #token = "";
   #expiresAt = 0;
   /** @type {ReturnType<typeof setTimeout> | undefined} */
@@ -55,6 +57,7 @@ class AuthStore {
     if (!clientId) throw new Error("Google sign-in is not configured. Set VITE_GOOGLE_CLIENT_ID in .env or add a client ID in Settings.");
     const previous = this.status;
     const reconnecting = previous === "expired" && Boolean(this.email);
+    this.reconnecting = reconnecting;
     this.status = "connecting";
     try {
       const response = await requestAccessToken({
@@ -70,7 +73,13 @@ class AuthStore {
       this.#scheduleExpiry();
     } catch (error) {
       this.status = previous;
+      this.reconnecting = false;
       throw error;
+    }
+    if (!reconnecting) {
+      // Possibly a different account (for example the spreadsheet's owner): drop the old details.
+      this.email = "";
+      this.name = "";
     }
     try {
       const profile = await fetchProfile(this.#token);
@@ -80,6 +89,7 @@ class AuthStore {
       console.warn("Signed in without profile details.", error);
     }
     this.status = "connected";
+    this.reconnecting = false;
   }
 
   #scheduleExpiry() {

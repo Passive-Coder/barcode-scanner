@@ -1,10 +1,9 @@
 <script>
   import { addTab, deleteTab, renameTab } from "$lib/sheet-actions.js";
-  import { auth } from "$lib/stores/auth.svelte.js";
   import { workspace } from "$lib/stores/workspace.svelte.js";
   import Button from "../ui/Button.svelte";
 
-  const disabled = $derived(!auth.connected || workspace.loading);
+  const disabled = $derived(!workspace.canEdit);
 </script>
 
 <div class="bar">

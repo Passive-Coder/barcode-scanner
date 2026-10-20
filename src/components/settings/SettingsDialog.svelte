@@ -1,4 +1,5 @@
 <script>
+  import { attempt } from "$lib/feedback.js";
   import { errorMessage } from "$lib/format.js";
   import { auth } from "$lib/stores/auth.svelte.js";
   import { dialogs } from "$lib/stores/dialogs.svelte.js";
@@ -43,6 +44,12 @@
     }
   }
 
+  /** Opens Google's account chooser, for example to sign in as a spreadsheet's owner. */
+  function switchAccount() {
+    close();
+    attempt(() => workspace.connect(), "Could not switch Google account");
+  }
+
   function signOut() {
     workspace.signOut();
     close();
@@ -54,7 +61,10 @@
   {#if auth.status !== "signed-out"}
     <div class="account">
       <span>Signed in{auth.email ? ` as ${auth.email}` : ""}</span>
-      <Button variant="quiet" tone="danger" onclick={signOut}>Sign out</Button>
+      <span class="account-actions">
+        <Button variant="quiet" onclick={switchAccount}>Switch account</Button>
+        <Button variant="quiet" tone="danger" onclick={signOut}>Sign out</Button>
+      </span>
     </div>
   {/if}
 
@@ -82,6 +92,12 @@
     background: var(--surface-sunk);
     font-size: 14px;
     overflow-wrap: anywhere;
+  }
+
+  .account-actions {
+    display: flex;
+    flex: none;
+    gap: 14px;
   }
 
   .group {

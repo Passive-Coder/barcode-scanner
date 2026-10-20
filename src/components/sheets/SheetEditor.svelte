@@ -3,6 +3,7 @@
   import ColumnMapping from "./ColumnMapping.svelte";
   import DataTable from "./DataTable.svelte";
   import StructureBar from "./StructureBar.svelte";
+  import ViewOnlyNotice from "./ViewOnlyNotice.svelte";
 
   /**
    * The open tab's structure, column mapping, and data. Each part can be left out: the mobile
@@ -14,6 +15,7 @@
 
 {#if workspace.tab}
   <div class="editor">
+    <ViewOnlyNotice />
     {#if showStructure}<StructureBar />{/if}
     {#if showMapping}<ColumnMapping />{/if}
     {#if showData}<DataTable />{/if}

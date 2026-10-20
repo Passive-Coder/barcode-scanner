@@ -1,7 +1,6 @@
 <script>
   import { pluralize } from "$lib/format.js";
   import { addColumn } from "$lib/sheet-actions.js";
-  import { auth } from "$lib/stores/auth.svelte.js";
   import { session } from "$lib/stores/session.svelte.js";
   import { workspace } from "$lib/stores/workspace.svelte.js";
   import Button from "../ui/Button.svelte";
@@ -37,7 +36,7 @@
   {/if}
 
   <div class="footer">
-    <Button disabled={!auth.connected || workspace.loading} onclick={addColumn}>Add column</Button>
+    <Button disabled={!workspace.canEdit} onclick={addColumn}>Add column</Button>
     <span>{summary}</span>
   </div>
 </section>

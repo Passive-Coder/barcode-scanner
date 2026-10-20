@@ -2,7 +2,6 @@
   import { SHEET_ROW_LIMIT } from "$lib/config.js";
   import { deleteRow, editRow } from "$lib/sheet-actions.js";
   import { columnLetter } from "$lib/sheets/values.js";
-  import { auth } from "$lib/stores/auth.svelte.js";
   import { workspace } from "$lib/stores/workspace.svelte.js";
   import Button from "../ui/Button.svelte";
 
@@ -10,7 +9,7 @@
   const columns = $derived(Array.from({ length: workspace.columnCount }, (_, index) => index));
   /** Data rows with their 1-based sheet row numbers (row 1 holds the headings). */
   const dataRows = $derived(workspace.rows.slice(1).map((cells, index) => ({ cells, rowNumber: index + 2 })));
-  const disabled = $derived(!auth.connected || workspace.loading);
+  const disabled = $derived(!workspace.canEdit);
 </script>
 
 <section aria-labelledby="{id}-title">

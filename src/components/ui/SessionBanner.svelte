@@ -4,7 +4,7 @@
   import { workspace } from "$lib/stores/workspace.svelte.js";
   import Button from "./Button.svelte";
 
-  const show = $derived(auth.status === "expired" || (auth.status === "connecting" && Boolean(auth.email)));
+  const show = $derived(auth.status === "expired" || (auth.status === "connecting" && auth.reconnecting));
 </script>
 
 {#if show}

@@ -1,7 +1,6 @@
 <script>
   import { deleteColumn, renameColumn } from "$lib/sheet-actions.js";
   import { columnLetter } from "$lib/sheets/values.js";
-  import { auth } from "$lib/stores/auth.svelte.js";
   import { session } from "$lib/stores/session.svelte.js";
   import { workspace } from "$lib/stores/workspace.svelte.js";
   import Button from "../ui/Button.svelte";
@@ -18,7 +17,7 @@
       ? [...session.availableFields, { key: stored, label: stored, type: "Saved" }]
       : session.availableFields,
   );
-  const disabled = $derived(!auth.connected || workspace.loading);
+  const disabled = $derived(!workspace.canEdit);
 </script>
 
 <div class="row">
