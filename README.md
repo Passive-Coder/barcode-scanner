@@ -1,61 +1,109 @@
 # Linework barcode scanner
 
-A browser based barcode scanner using the supplied Dynamsoft Barcode Reader JS 11.6.3200 package. It decodes camera feeds and uploaded images, identifies typed values inside QR and other barcode payloads, and can record selected values to Google Sheets. The interface uses a burgundy and ivory theme inspired by the supplied apparel reference, with GSAP motion that respects reduced motion settings.
+A browser-based barcode scanner built with **Svelte 5** and **Vite**. It decodes camera feeds and uploaded images with [zxing-wasm](https://github.com/Sec-ant/zxing-wasm), identifies typed values inside QR and other barcode payloads, and records selected values to Google Sheets.
 
-On mobile, Google sign-in leads through an animated Student Council mark to a home menu. **Barcode Scanning** and **Edit Google Sheets** each open the saved spreadsheet list, with a Google Sheets link field when no spreadsheet is linked. Select a spreadsheet to enter the chosen workspace. The mark in the home header opens account settings and sign-out. Scanner and OAuth configuration remain available under **Scanner & account setup** there. The five-part mark is vector artwork traced from the supplied reference; the reference screenshots are not in the repository.
+Wider screens show everything on one page. On phones (≤ 700 px), Google sign-in plays a short Student Council mark animation, then a home menu offers **Scan barcodes** or **Edit a spreadsheet**; both open the saved spreadsheet list, where a new sheet can be added by its link. The mark in the home header opens the account menu. The welcome screen's ribbons are drawn on a canvas and animated with GSAP.
+
+## Getting started
+
+Requires Node.js 20.19 or later.
+
+```sh
+npm install
+cp .env.example .env   # then fill in VITE_GOOGLE_CLIENT_ID
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). The port is fixed (`DEV_PORT` in `.env`) because Google only allows sign-in from Authorized JavaScript origins. Camera access requires localhost or HTTPS.
+
+| Script | What it does |
+| --- | --- |
+| `npm run dev` | Development server with hot reload |
+| `npm run build` | Production build in `dist/` |
+| `npm run preview` | Serves the production build on the same port |
+| `npm run check` | Type and accessibility checks (svelte-check) |
+| `npm test` | Unit tests (Vitest) |
+| `npm run deploy` | Check, test, build, then `wrangler deploy` |
+
+## Configuration
+
+Configuration lives in `.env`, which git ignores; `.env.example` documents every variable.
+
+| Variable | Purpose |
+| --- | --- |
+| `VITE_GOOGLE_CLIENT_ID` | Google OAuth 2.0 Web Client ID |
+| `DEV_PORT` | Port for `dev` and `preview` (default 3000) |
+
+`VITE_` values are compiled into the browser bundle, so they must be safe to publish. The client ID is: the app uses Google's browser token flow, which needs only a client ID and **never a client secret**. Do not put secrets such as a client secret, a service-account key, or a Cloudflare API token in a `VITE_` variable.
+
+The client ID can be overridden per browser in **Settings**. An override is kept in local storage and wins over `.env`; "Use default" clears it.
+
+## Google OAuth setup
+
+Linework uses its own OAuth Web Client in the existing `perfect-nature-463213-t8` Google Cloud project. Its **Authorized JavaScript origins** are:
+
+- `https://linework-barcode-scanner.passiveuser369.workers.dev`
+- `http://localhost:3000` for local development (`http://localhost:8000` is also allowed)
+
+The **Google Sheets API** is enabled in that project. The app requests the `spreadsheets`, `userinfo.email`, and `userinfo.profile` scopes; the profile scope supplies the first name in the mobile greeting. While the consent screen is in testing mode, only its listed test users can connect.
+
+Access tokens stay in memory only. When a token expires, the app keeps your place and shows a **Reconnect** banner, which signs back in to the same account. A page reload signs you out.
 
 ## Google Sheets workflow
 
 1. Select **Connect Google** and grant Sheets access.
-2. Paste a Google Sheets spreadsheet link, then select one of its tabs.
+2. Paste a Google Sheets link (or a spreadsheet ID), then choose one of its tabs.
 3. Scan a barcode to discover its fields, values, and inferred types. Supported payloads include JSON objects and arrays, URLs and query parameters, Wi-Fi codes, vCards and MECARD contacts, labeled `Name: value` or `Name=value` lines, email and telephone links, GS1 application identifiers, and retail identifiers. Raw value, barcode format, content type, byte size, and scan time are always available.
-4. Assign each sheet column a field from the latest scan. Further scans show the selected fields first and automatically write all matching values to a single new row. Fields absent from a scan leave their mapped cells blank. A scan with no matching mapped fields is not written.
-5. Use the sheet workspace to add, rename, or delete tabs and columns, and add, edit, or delete rows. The app reads and displays the first 1,000 rows of the selected tab. Refresh to see changes made elsewhere.
+4. Assign each sheet column a field from this session's scans. Further scans show the selected fields first and write all matching values to a single new row. The results panel always says whether scans are being recorded, and if not, why.
+5. Use the workspace to add, rename, or delete tabs and columns, and add, edit, or delete rows. Row edits write only the cells you changed, so formulas and formatting elsewhere in the row are preserved. The app reads the first 1,000 rows of the selected tab; select **Refresh** to see changes made elsewhere.
 
-The app accepts a Google Sheets link, not a Google Docs text document. It does not create or delete an entire spreadsheet file. Linked URLs and column mappings stay in browser local storage. Google OAuth access tokens remain in memory and are cleared on page reload; reconnect to resume writing. Scan history is kept only for the current page session. Values are sent to Google Sheets with `RAW` input mode so barcode text is not interpreted as a formula. Detected numbers and booleans retain their cell types; identifiers remain text.
+Values are written with `RAW` input, so barcode text is never run as a formula. Numbers and `TRUE`/`FALSE` keep their cell types, and identifiers with leading zeros stay text. Linked URLs and column mappings stay in browser local storage. Scan history lasts for the current page session only.
 
-## Google OAuth setup
+## Barcode decoding
 
-Linework uses its own OAuth Web Client in the existing `perfect-nature-463213-t8` Google Cloud project. The Scavenger Hunt client's origins and redirect URIs are unchanged. The app includes only Linework's public client ID, never a client secret. Its **Authorized JavaScript origins** are:
+Barcodes are decoded by [zxing-wasm](https://github.com/Sec-ant/zxing-wasm), a WebAssembly build of ZXing-C++, which reads QR Code, Data Matrix, Aztec, PDF417, MaxiCode, EAN/UPC, Code 128, Code 39, Code 93, Codabar, ITF, DataBar and more. No license key is needed.
 
-- `https://linework-barcode-scanner.passiveuser369.workers.dev`
-- `http://localhost:8000` for local development
-
-The **Google Sheets API** is enabled in the shared Cloud project, and its consent screen includes `spreadsheets` and `userinfo.email` scopes. While the consent screen remains in testing mode, only its listed test users can connect. Google shows an unverified-app warning to test users. Its branding is shared with the other apps in that project. The public OAuth Web Client ID can be changed in the app's Settings if this setup changes.
-
-## Run locally
-
-```sh
-python3 -m http.server 8000
-```
-
-Open [http://localhost:8000](http://localhost:8000). Camera access requires localhost or HTTPS.
+Decoding runs in a Web Worker (`src/lib/scanner/zxing.worker.js`) so the camera preview stays smooth. The camera loop sends one frame at a time, scaled to at most 1280 px, so slower devices simply decode less often. Uploaded images are decoded by the browser first, so any format it can display works and EXIF rotation is respected. The WASM file is bundled with the app instead of being fetched from zxing-wasm's default CDN.
 
 ## Deploy to Cloudflare Workers
 
 ```sh
-node scripts/build.mjs
-npx wrangler deploy
+npm run deploy
 ```
 
-The build copies only the app shell, source, and required vendor runtime files into the ignored `dist/` directory. The Worker name and assets configuration are in `wrangler.toml`.
+This checks, tests, and builds, then publishes `dist/` as static assets (see `wrangler.toml`). `public/_headers` sets long-lived caching for hashed assets and basic security headers, including a camera permission policy.
 
-## Scanner license
+## Project structure
 
-The sample key in the supplied Dynamsoft package was rejected by Dynamsoft's license server. The app starts with [Dynamsoft's public 24-hour test key](https://www.dynamsoft.com/barcode-reader/docs/web/programming/javascript/user-guide/). For ongoing Dynamsoft use, enter your own key in Settings; it stays in browser local storage. If Dynamsoft authorization fails, the app uses the browser's `BarcodeDetector` when available. That fallback supports only the formats provided by the browser.
+```
+src/
+  main.js, App.svelte, app.css     entry point, layout switch, design tokens
+  lib/
+    config.js, env.d.ts            .env configuration
+    storage.js, format.js          local storage and formatting helpers
+    motion.js                      GSAP attachments (reduced-motion aware)
+    ribbons/                       GSAP-animated canvas ribbons for the welcome screen
+    feedback.js, sheet-actions.js  error toasts; dialog-driven sheet flows
+    barcode/fields.js              payload parsing and typed field extraction
+    sheets/values.js               spreadsheet IDs, A1 ranges, cell typing
+    google/                        Google Identity Services and Sheets REST client
+    scanner/                       zxing-wasm worker, camera scanner, image scanner
+    stores/                        Svelte 5 rune stores: auth, workspace, session, camera,
+                                   settings, dialogs, toast, layout
+  components/
+    ui/                            Button, Modal, dialogs, Toast, SectionHeading, SessionBanner
+    brand/                         Council mark, brand mark, Google glyph, ribbon canvas
+    capture/                       capture tabs, camera frame, image upload
+    results/                       decoded scan, fields, details, recording status
+    sheets/                        link form, picker, structure, column mapping, data table
+    history/, settings/            session history; settings and account dialogs
+  views/
+    desktop/                       scanning studio page
+    mobile/                        welcome, reveal, home, sheet chooser, workspace
+```
 
-## Structure
+Unit tests sit next to the modules they cover (`*.test.js`).
 
-- `index.html`: semantic app shell
-- `src/app.js`: camera, image, results, and session history
-- `src/mobile-shell.js`, `src/council-mark.js`, `src/assets/air-ribbons.svg`: mobile navigation and reference-inspired artwork
-- `src/barcode-fields.js`: typed field extraction
-- `src/sheets-workspace.js`: spreadsheet interface and field mappings
-- `src/google/auth.js`: browser OAuth token handling
-- `src/google/sheets.js`: Sheets REST client and spreadsheet operations
-- `src/scanner.js`, `src/native-scanner.js`: Dynamsoft and browser scanner engines
-- `src/interpret.js`: additional readable barcode details
-- `src/styles.css`: responsive theme
-- `vendor/dynamsoft`, `vendor/gsap`: required scanner and motion runtimes
+## Privacy
 
-Barcode values alone do not reveal product names or prices; retail codes are shown as identifiers. Barcode images and decoded results are not sent to an application server. Mapped values are sent to the chosen Google Sheet when automatic recording is on.
+Barcode values alone do not reveal product names or prices; retail codes are shown as identifiers. Images are decoded in the browser and never uploaded. Mapped values are sent only to the Google Sheet you choose, and only while automatic recording is on.

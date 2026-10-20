@@ -4,3 +4,7 @@ dist/
 .wrangler/
 *.log
 
+# Local environment files hold per-developer configuration.
+.env
+.env.*
+!.env.example

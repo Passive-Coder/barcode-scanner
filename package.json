@@ -1,0 +1,31 @@
+{
+  "name": "linework-barcode-scanner",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Scan barcodes, inspect typed values, and record selected fields in Google Sheets.",
+  "type": "module",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./jsconfig.json --fail-on-warnings",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "deploy": "npm run check && npm test && npm run build && npx wrangler deploy"
+  },
+  "dependencies": {
+    "gsap": "3.15.0",
+    "zxing-wasm": "3.1.4"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "7.3.1",
+    "svelte": "5.57.1",
+    "svelte-check": "4.7.6",
+    "typescript": "6.0.3",
+    "vite": "8.3.2",
+    "vitest": "5.0.3"
+  }
+}

@@ -1,5 +1,6 @@
 name = "linework-barcode-scanner"
 compatibility_date = "2026-10-19"
 
+# Static assets produced by `npm run build`. Caching and security headers live in public/_headers.
 [assets]
 directory = "./dist"

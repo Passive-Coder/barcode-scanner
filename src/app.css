@@ -1,0 +1,256 @@
+/*
+ * Global foundations: design tokens, reset, and the few shared classes used across components.
+ * Component styles live in each .svelte file. Wide screens use the ivory theme; below the
+ * mobile breakpoint App.svelte sets data-layout="mobile" and the wine theme applies everywhere,
+ * including dialogs.
+ */
+
+:root {
+  --font-sans: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --bg: #f6f2ec;
+  --surface: #fffdf9;
+  --surface-sunk: #efe7dd;
+  --surface-hover: #f1e6dc;
+  --ink: #3b1a20;
+  --ink-strong: #5a0d1b;
+  --ink-muted: #725852;
+  --accent: #741021;
+  --accent-hover: #8e1f31;
+  --on-accent: #fff8ee;
+  --line: #e2d6cb;
+  --line-strong: #cdb8ab;
+  --danger: #a3222c;
+  --on-danger: #fff8ee;
+  --success: #2f7a4a;
+  --link: #8a1f30;
+  --secondary-bg: var(--surface);
+  --secondary-border: #c9b2a6;
+  --focus-ring: #8e1f31;
+
+  --field-bg: #fffdf9;
+  --field-border: #cdb8ab;
+  --field-ink: #3b1a20;
+  --field-placeholder: #9a827b;
+
+  --camera-bg: #2a060e;
+  --camera-ink: #fbefe2;
+  --camera-muted: #d9b6b0;
+
+  --table-bg: #fffdf9;
+  --table-head: #f1e7dd;
+  --table-ink: #3b1a20;
+  --table-line: #ece2d8;
+  --table-hover: #faf3eb;
+  --table-muted: #7d655e;
+
+  --dialog-bg: #fffdf9;
+  --dialog-ink: #3b1a20;
+  --dialog-line: #e2d6cb;
+  --backdrop: #2104099e;
+
+  --toast-bg: #3b1a20;
+  --toast-ink: #fff8ee;
+  --toast-error-bg: #8f1d27;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --gutter: clamp(18px, 4vw, 48px);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  color-scheme: light;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--bg);
+  font-synthesis: none;
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+}
+
+:root[data-layout="mobile"] {
+  --bg: #5c0a19;
+  --surface: #6d1426;
+  --surface-sunk: #6d1426;
+  --surface-hover: #7c1f32;
+  --ink: #f8ebd9;
+  --ink-strong: #fff5e8;
+  --ink-muted: #e0bfb2;
+  --accent: #f8ebd9;
+  --accent-hover: #ead7bf;
+  --on-accent: #5a0d1b;
+  --line: #8d4352;
+  --line-strong: #a5606c;
+  --danger: #ffb4a8;
+  --on-danger: #4a0612;
+  --success: #9bd8ae;
+  --link: #f6d3c0;
+  --secondary-bg: #6d1426;
+  --secondary-border: #a5606c;
+  --focus-ring: #fff5e5;
+
+  --field-bg: #4a0714;
+  --field-border: #a5606c;
+  --field-ink: #f8ebd9;
+  --field-placeholder: #c99a92;
+
+  --camera-bg: #2a060e;
+
+  --dialog-bg: #64101f;
+  --dialog-ink: #f8ebd9;
+  --dialog-line: #8d4352;
+  --backdrop: #1d020acf;
+
+  --toast-bg: #f8ebd9;
+  --toast-ink: #4a0612;
+  --toast-error-bg: #ffd9cf;
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  min-height: 100svh;
+  background: var(--bg);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  color: var(--ink-strong);
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+/* Shared text styles */
+
+.field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+
+.muted {
+  color: var(--ink-muted);
+}
+
+.empty-note {
+  margin: 0;
+  padding: 16px 0;
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Shared form controls */
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-sm);
+  background: var(--field-bg);
+  color: var(--field-ink);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.textarea {
+  padding: 10px 12px;
+  resize: vertical;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--field-placeholder);
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-ring) 22%, transparent);
+}
+
+.select:disabled,
+.input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.input-mono {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
