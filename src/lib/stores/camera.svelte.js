@@ -6,7 +6,7 @@ const HINTS = {
   insecure: "Camera access requires localhost or a secure HTTPS connection.",
   idle: "Start the camera to read barcodes in real time.",
   starting: "Starting the camera…",
-  live: "Hold a barcode inside the frame. Results appear automatically.",
+  live: "Hold a barcode anywhere in view. Results appear automatically.",
   stopped: "Camera stopped. Start again whenever you're ready.",
 };
 
@@ -23,6 +23,9 @@ class CameraStore {
   selectedId = $state("");
   torchSupported = $state(false);
   torchOn = $state(false);
+  /** The live feed's width ÷ height, so the preview frame can match it and show the whole image. */
+  /** @type {number | null} */
+  aspectRatio = $state(null);
   hint = $state(typeof window !== "undefined" && !window.isSecureContext ? HINTS.insecure : HINTS.idle);
   hintIsError = $state(false);
   #wanted = false;
@@ -49,6 +52,7 @@ class CameraStore {
     this.selectedId = scanner.active ? scanner.selectedCameraId : this.selectedId;
     this.torchSupported = scanner.active && scanner.torchSupported;
     this.torchOn = scanner.active && scanner.torchOn;
+    this.aspectRatio = scanner.aspectRatio;
   }
 
   /** @param {string} message @param {boolean} [isError] */
@@ -127,3 +131,5 @@ export const camera = new CameraStore();
 
 // The scanner stops itself if the decoder keeps failing (for example, the WASM can't load).
 scanner.onError = (error) => camera.reportFailure(error);
+// Rotating the device or switching cameras changes the feed's shape.
+scanner.onResize = () => (camera.aspectRatio = scanner.aspectRatio);

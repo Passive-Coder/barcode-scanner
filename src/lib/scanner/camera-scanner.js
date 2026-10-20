@@ -1,8 +1,11 @@
 import { decode, warmUpDecoder } from "./decoder.js";
 import { createScan, readPixels } from "./scan.js";
 
-/** Frames are downscaled to this size before decoding; plenty for codes that fill part of the view. */
-const MAX_FRAME_EDGE = 1280;
+/**
+ * Every frame is decoded whole, at the camera's own resolution (1920×1080 is requested). The cap
+ * only guards against unusually large sensors; zxing downscales internally when that is faster.
+ */
+const MAX_FRAME_EDGE = 3840;
 /** Lower bound between decodes; the worker's own speed is the usual limit. */
 const MIN_FRAME_INTERVAL_MS = 80;
 /** Consecutive decoder failures before the camera gives up and reports the problem. */
@@ -34,6 +37,8 @@ export class CameraScanner {
   selectedCameraId = "";
   /** @type {(error: unknown) => void} */
   onError = () => {};
+  /** Called when the feed's dimensions change (camera switch, device rotation). */
+  onResize = () => {};
 
   /** @param {{ onResults: (scans: import("../barcode/fields.js").RawScan[]) => void }} options */
   constructor({ onResults }) {
@@ -67,7 +72,10 @@ export class CameraScanner {
       throw new DOMException("Camera start was cancelled.", "AbortError");
     }
     this.#stream = stream;
-    this.#video ??= Object.assign(document.createElement("video"), { autoplay: true, playsInline: true, muted: true });
+    if (!this.#video) {
+      this.#video = Object.assign(document.createElement("video"), { autoplay: true, playsInline: true, muted: true });
+      this.#video.addEventListener("resize", () => this.onResize());
+    }
     this.#video.srcObject = stream;
     this.attach(this.#container);
     try {
@@ -123,6 +131,12 @@ export class CameraScanner {
   async selectCamera(deviceId) {
     await this.stop();
     await this.start(deviceId);
+  }
+
+  /** Width ÷ height of the live feed, so the preview can show all of it; null until known. */
+  get aspectRatio() {
+    const video = this.#video;
+    return this.active && video?.videoWidth && video.videoHeight ? video.videoWidth / video.videoHeight : null;
   }
 
   get #track() {

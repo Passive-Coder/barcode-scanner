@@ -13,16 +13,20 @@
       camera.attach(null);
     };
   });
+
+  // While live, the frame takes the feed's own shape, so the whole camera image is visible
+  // and nothing is cropped away; the scanner decodes that entire image too.
+  const liveRatio = $derived(camera.live && camera.aspectRatio ? camera.aspectRatio : null);
+  // A tall feed is narrowed rather than letterboxed, so it keeps its shape within the height cap.
+  const liveWidth = $derived(liveRatio ? `min(100%, calc(72svh * ${liveRatio}))` : undefined);
 </script>
 
-<div class={["frame", camera.live && "live"]}>
+<div class={["frame", camera.live && "live"]} style:aspect-ratio={liveRatio ? String(liveRatio) : undefined} style:width={liveWidth}>
   <div class="view" bind:this={view}></div>
-  {#if camera.live}
-    <div class="target" aria-hidden="true"></div>
-  {:else}
+  {#if !camera.live}
     <div class="empty">
       <strong>Camera is off</strong>
-      <span>Start the camera and hold a barcode in view.</span>
+      <span>Start the camera and hold a barcode anywhere in view.</span>
     </div>
   {/if}
 </div>
@@ -31,7 +35,8 @@
   .frame {
     position: relative;
     aspect-ratio: 16 / 10;
-    min-height: 260px;
+    max-height: 72svh;
+    margin: 0 auto;
     overflow: hidden;
     border-radius: var(--radius);
     background: var(--camera-bg);
@@ -43,21 +48,17 @@
     inset: 0;
   }
 
+  /* `contain`, never `cover`: the full camera image is shown, letterboxed if space is tight. */
   .view > :global(video) {
     display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
   }
 
-  /* A plain aiming box; the whole frame is decoded, so this is guidance only. */
-  .target {
-    position: absolute;
-    inset: 22% 18%;
-    border: 2px solid #fff4e6cc;
-    border-radius: 12px;
-    box-shadow: 0 0 0 100vmax #0000002e;
-    pointer-events: none;
+  /* Only the placeholder has a minimum height; a live frame always keeps the feed's shape. */
+  .frame:not(.live) {
+    min-height: 220px;
   }
 
   .empty {
@@ -83,14 +84,10 @@
   }
 
   @media (max-width: 700px) {
-    .frame {
+    .frame:not(.live) {
       aspect-ratio: 4 / 5;
       min-height: 0;
       max-height: 62svh;
-    }
-
-    .target {
-      inset: 30% 12%;
     }
   }
 </style>
