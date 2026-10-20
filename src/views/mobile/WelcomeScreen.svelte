@@ -33,6 +33,7 @@
       <GoogleGlyph />
       <span>{busy ? "Connecting…" : "Continue with Google"}</span>
     </button>
+    <a class="privacy" href="/privacy.html">Privacy policy</a>
   </div>
   <Ribbons position="bottom" />
 </section>
@@ -99,5 +100,13 @@
 
   .google:active {
     transform: scale(0.98);
+  }
+
+  .privacy {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--ink-muted);
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 </style>

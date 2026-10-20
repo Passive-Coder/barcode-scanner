@@ -37,6 +37,9 @@
       <HistoryList />
     </section>
   </main>
+  <footer class="footer">
+    <a href="/privacy.html">Privacy policy</a>
+  </footer>
 </div>
 
 <style>
@@ -59,6 +62,19 @@
     display: grid;
     grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
     gap: 32px;
+  }
+
+  .footer {
+    width: min(1280px, 100%);
+    margin: 0 auto;
+    padding: 0 var(--gutter) 32px;
+    font-size: 13px;
+  }
+
+  .footer a {
+    color: var(--ink-muted);
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
   .history {
