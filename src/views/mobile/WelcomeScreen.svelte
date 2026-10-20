@@ -27,7 +27,8 @@
   <Ribbons position="top" />
   <div class="content">
     <div class="mark"><CouncilMark label="Student Council" /></div>
-    <h1 id="welcome-title">Linework</h1>
+    <h1 id="welcome-title">stucovitv.in</h1>
+    <span class="product-name">Linework barcode scanner</span>
     <p>Scan barcodes, inspect their fields, and record selected values in a Google Sheet you choose.</p>
     <button class="google" type="button" disabled={busy} aria-busy={busy || undefined} onclick={signIn}>
       <GoogleGlyph />
@@ -68,10 +69,19 @@
   }
 
   h1 {
-    font-size: 40px;
+    font-size: clamp(29px, 8vw, 40px);
     font-weight: 700;
     letter-spacing: -0.03em;
     line-height: 1.05;
+  }
+
+  .product-name {
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
   }
 
   p {

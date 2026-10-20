@@ -14,9 +14,9 @@
 </script>
 
 <header class="topbar">
-  <a class="brand" href="./" aria-label="Linework home">
+  <a class="brand" href="./" aria-label="stucovitv.in Linework home">
     <BrandMark />
-    <span>Linework</span>
+    <span class="brand-copy"><strong>stucovitv.in</strong><small>Linework barcode scanner</small></span>
   </a>
   <div class="right">
     {#if auth.connected && auth.email}
@@ -62,6 +62,25 @@
   .brand :global(.mark) {
     transform: scale(0.8);
     color: var(--accent);
+  }
+
+  .brand-copy {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+  }
+
+  .brand-copy strong {
+    font: inherit;
+  }
+
+  .brand-copy small {
+    margin-top: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
   }
 
   .right {
