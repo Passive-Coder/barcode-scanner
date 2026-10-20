@@ -77,7 +77,7 @@ class AuthStore {
       throw error;
     }
     if (!reconnecting) {
-      // Possibly a different account (for example the spreadsheet's owner): drop the old details.
+      // A person may choose a different Google account; discard the previous profile.
       this.email = "";
       this.name = "";
     }

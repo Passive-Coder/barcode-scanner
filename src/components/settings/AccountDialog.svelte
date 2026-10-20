@@ -13,7 +13,7 @@
     workspace.signOut();
   }
 
-  /** Opens Google's account chooser, for example to sign in as a spreadsheet's owner. */
+  /** Opens Google's account chooser to use a different personal Google account. */
   function switchAccount() {
     close();
     attempt(() => workspace.connect(), "Could not switch Google account");

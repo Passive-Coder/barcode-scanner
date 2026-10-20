@@ -16,7 +16,7 @@ import { toast } from "./toast.svelte.js";
 
 const api = new SheetsClient({ getToken: () => auth.token(), onUnauthorized: () => auth.expire() });
 
-const VIEW_ONLY_MESSAGE = "This Google account can only view this spreadsheet. Sign in as the owner to make changes.";
+const VIEW_ONLY_MESSAGE = "This Google account can view this spreadsheet but can't edit it. Ask for Editor access to make changes.";
 
 /** @param {unknown} value */
 const isLinkList = (value) => Array.isArray(value) && value.every((link) => typeof link?.id === "string" && typeof link?.title === "string");
@@ -78,7 +78,7 @@ class WorkspaceStore {
   recording = $derived.by(() => {
     if (auth.status === "expired") return { active: false, reason: "Google session expired. Reconnect to keep recording scans." };
     if (!auth.connected) return { active: false, reason: "Connect Google to record scans in a spreadsheet." };
-    if (this.readOnly) return { active: false, reason: "This account can only view the spreadsheet, so scans can't be saved. Sign in as the owner." };
+    if (this.readOnly) return { active: false, reason: "This account can view the spreadsheet but can't edit it. Ask for Editor access to save scans." };
     if (!this.tab) return { active: false, reason: "Choose a spreadsheet tab to record scans." };
     if (!this.mappedCount) return { active: false, reason: "Map at least one column to a barcode field to record scans." };
     if (!this.autoSave) return { active: false, reason: "Automatic recording is paused." };
@@ -142,11 +142,7 @@ class WorkspaceStore {
     return this.tab ? `“${this.tab.title}” · ${pluralize(Math.max(0, rowCount - 1), "data row")} loaded` : "This spreadsheet has no tabs.";
   }
 
-  /**
-   * Signs in, then reopens the last spreadsheet so the workspace is ready. Calling it while
-   * signed in opens Google's account chooser, which is how someone switches to the
-   * spreadsheet owner's account.
-   */
+  /** Signs in with the user's Google account, then reopens the last spreadsheet. */
   async connect() {
     await auth.connect();
     // A different account may have different access to the same spreadsheets.

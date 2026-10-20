@@ -45,13 +45,15 @@ Linework uses its own OAuth Web Client in the existing `perfect-nature-463213-t8
 - `https://linework-barcode-scanner.passiveuser369.workers.dev`
 - `http://localhost:3000` for local development (`http://localhost:8000` is also allowed)
 
-The **Google Sheets API** is enabled in that project. The app requests the `spreadsheets`, `userinfo.email`, and `userinfo.profile` scopes; the profile scope supplies the first name in the mobile greeting. While the consent screen is in testing mode, only its listed test users can connect.
+The **Google Sheets API** is enabled in that project. The first Google sign-in requests the `spreadsheets`, `userinfo.email`, and `userinfo.profile` scopes together. The Sheets token belongs to the person signing in; no separate owner account or app-wide Sheets credential is used. Anyone whose Google account can open a linked spreadsheet can view it in Linework, and anyone with Editor access can record scans and make changes. The profile scope supplies the first name in the mobile greeting.
+
+The shared Cloud project's OAuth audience is **External** and **In production**. Google currently marks its branding and sensitive Sheets scope as unverified. New users may see Google's unverified-app warning, and the project has a lifetime **100-user grant cap** until Google approves the scope. Its branding is currently `The-Case`, because the project also hosts other OAuth clients. Broad public access requires finishing Google's branding and data-access verification for that shared project; changing its branding affects those other clients.
 
 Access tokens stay in memory only. When a token expires, the app keeps your place and shows a **Reconnect** banner, which signs back in to the same account. A page reload signs you out.
 
 ## Google Sheets workflow
 
-1. Select **Connect Google** and grant Sheets access.
+1. Sign in with your Google account and grant Sheets access during that same sign-in.
 2. Paste a Google Sheets link (or a spreadsheet ID), then choose one of its tabs.
 3. Scan a barcode to discover its fields, values, and inferred types. Supported payloads include JSON objects and arrays, URLs and query parameters, Wi-Fi codes, vCards and MECARD contacts, labeled `Name: value` or `Name=value` lines, email and telephone links, GS1 application identifiers, and retail identifiers. Raw value, barcode format, content type, byte size, and scan time are always available.
 4. Assign each sheet column a field from this session's scans. Further scans show the selected fields first and write all matching values to a single new row. The results panel always says whether scans are being recorded, and if not, why.

@@ -45,9 +45,9 @@ export function permissionError(detail, method) {
     return new Error("The Google Sheets API isn't enabled for this app's Google Cloud project.");
   }
   if (method === "GET") {
-    return new SheetsPermissionError("This Google account can't open this spreadsheet. Sign in with the Google account that owns it.", "no-access");
+    return new SheetsPermissionError("This Google account can't open this spreadsheet. Ask for access or choose a sheet shared with this account.", "no-access");
   }
-  return new SheetsPermissionError("This Google account can only view this spreadsheet. Sign in as the owner to make changes.", "view-only");
+  return new SheetsPermissionError("This Google account can view this spreadsheet but can't edit it. Ask for Editor access to make changes.", "view-only");
 }
 
 /** Google Sheets REST client. Every request asks the auth layer for a live token. */

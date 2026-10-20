@@ -21,8 +21,8 @@ describe("Sheets permission errors", () => {
     const error = await failure(client().appendColumn("sheet-id", 0));
     expect(error).toBeInstanceOf(SheetsPermissionError);
     expect(error.access).toBe("view-only");
-    expect(error.message).toMatch(/can only view this spreadsheet/);
-    expect(error.message).toMatch(/Sign in as the owner/);
+    expect(error.message).toMatch(/can view this spreadsheet but can't edit it/);
+    expect(error.message).toMatch(/Editor access/);
     expect(error.message).not.toMatch(/caller/i);
   });
 
@@ -32,7 +32,7 @@ describe("Sheets permission errors", () => {
     expect(error).toBeInstanceOf(SheetsPermissionError);
     expect(error.access).toBe("no-access");
     expect(error.message).toMatch(/can't open this spreadsheet/);
-    expect(error.message).toMatch(/account that owns it/);
+    expect(error.message).toMatch(/Ask for access/);
   });
 
   it("asks to sign in again when the token lacks the Sheets permission", () => {

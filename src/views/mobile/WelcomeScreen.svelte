@@ -33,6 +33,7 @@
       <GoogleGlyph />
       <span>{busy ? "Connecting…" : "Continue with Google"}</span>
     </button>
+    <span class="consent-note">You'll allow Linework to access your Google Sheets during sign-in.</span>
     <a class="privacy" href="/privacy.html">Privacy policy</a>
   </div>
   <Ribbons position="bottom" />
@@ -103,10 +104,17 @@
   }
 
   .privacy {
-    margin-top: 16px;
+    margin-top: 10px;
     font-size: 13px;
     color: var(--ink-muted);
     text-decoration: underline;
     text-underline-offset: 3px;
+  }
+
+  .consent-note {
+    margin-top: 14px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--ink-muted);
   }
 </style>
