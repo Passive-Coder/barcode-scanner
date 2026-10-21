@@ -9,10 +9,11 @@
 <span class={["pill", tone]}>{@render children()}</span>
 
 <style>
+  /* Long labels (such as a sub-team's name) wrap inside the pill instead of running past it. */
   .pill {
     display: inline-flex;
     align-items: center;
-    flex: none;
+    max-width: 100%;
     padding: 1px 8px;
     border-radius: 999px;
     background: color-mix(in srgb, var(--ink) 13%, transparent);
@@ -20,7 +21,7 @@
     font-size: 12px;
     font-weight: 600;
     line-height: 1.6;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
   }
 
   .accent {

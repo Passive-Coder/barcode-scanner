@@ -36,8 +36,10 @@
     font-size: 14px;
     font-weight: 600;
     line-height: 1.15;
-    text-align: left;
-    white-space: nowrap;
+    text-align: center;
+    /* A long label wraps inside the button rather than pushing it past a narrow screen. */
+    max-width: 100%;
+    overflow-wrap: anywhere;
     transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.2s;
   }
 
@@ -107,6 +109,19 @@
 
   .icon:hover:not(:disabled) {
     background: var(--surface-hover);
+  }
+
+  /* On touch screens every button is at least a fingertip tall, including the text-style ones. */
+  @media (pointer: coarse) {
+    .outline,
+    .quiet {
+      min-height: 44px;
+    }
+
+    .icon {
+      width: 44px;
+      min-height: 44px;
+    }
   }
 
   .spinner {

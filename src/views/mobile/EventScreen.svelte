@@ -15,7 +15,8 @@
 </script>
 
 <div class="screen" {@attach enter({ y: 12, duration: 0.4 })}>
-  <MobileBar title={events.detail?.event.name ?? "Event"} subtitle="Event" backLabel="Back to events" onback={back} />
+  <!-- The event's name is the page's own heading, where it has room to wrap. -->
+  <MobileBar title="Event" backLabel="Back to events" onback={back} />
   <SessionBanner />
   {#if account.ready}
     <EventDetail onclosed={back} />
@@ -35,8 +36,7 @@
     margin-bottom: 16px;
   }
 
-  /* The bar already shows the event's name. */
   .screen :global(.detail h2) {
-    font-size: 20px;
+    font-size: 22px;
   }
 </style>

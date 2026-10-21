@@ -79,11 +79,15 @@ class TeamStore {
     await this.load();
   }
 
+  close() {
+    this.selectedId = "";
+    this.detail = null;
+  }
+
   reset() {
     this.list = [];
     this.loaded = false;
-    this.selectedId = "";
-    this.detail = null;
+    this.close();
   }
 }
 

@@ -6,8 +6,16 @@
   import { workspace } from "$lib/stores/workspace.svelte.js";
   import Button from "../ui/Button.svelte";
 
+  /** Narrowest readable column in the table. Below it, rows are shown as cards instead. */
+  const MIN_COLUMN_WIDTH = 120;
+  /** The row number and Edit/Delete columns. */
+  const FIXED_WIDTH = 52 + 136;
+
   const id = $props.id();
   const columns = $derived(Array.from({ length: workspace.columnCount }, (_, index) => index));
+  let width = $state(0);
+  /** Cards on phones and for wide sheets, so the page never scrolls sideways. */
+  const cards = $derived(width > 0 && width < columns.length * MIN_COLUMN_WIDTH + FIXED_WIDTH);
   /** Data rows with their 1-based sheet row numbers (row 1 holds the headings). */
   const dataRows = $derived(workspace.rows.slice(1).map((cells, index) => ({ cells, rowNumber: index + 2 })));
   const disabled = $derived(!workspace.canEdit);
@@ -51,18 +59,52 @@
   };
 </script>
 
-<section aria-labelledby="{id}-title">
+<section aria-labelledby="{id}-title" bind:clientWidth={width}>
   <div class="heading">
     <div>
-      <h3 id="{id}-title">Rows</h3>
-      <p>Showing up to {SHEET_ROW_LIMIT.toLocaleString()} rows. Double-click a cell to edit it; edits are saved straight to Google Sheets.</p>
+      <h3 id="{id}-title">Rows <span class="count">{dataRows.length.toLocaleString()}</span></h3>
+      <p>
+        {cards ? "Tap Edit on a row to change it." : "Double-click a cell to edit it."} Changes are saved straight to Google Sheets.
+        {#if dataRows.length >= SHEET_ROW_LIMIT - 1}Only the first {SHEET_ROW_LIMIT.toLocaleString()} rows are shown.{/if}
+      </p>
     </div>
     <Button {disabled} onclick={() => editRow(null)}>Add row</Button>
   </div>
 
-  <div class="wrap">
-    {#if columns.length}
+  {#if !columns.length}
+    <p class="empty">This tab has no columns yet. Add a column above, then add rows or scan barcodes into it.</p>
+  {:else if !dataRows.length}
+    <p class="empty">No rows yet. Scan a barcode or add a row.</p>
+  {:else if cards}
+    <ol class="cards">
+      {#each dataRows as row (row.rowNumber)}
+        <li class="card">
+          <div class="card-head">
+            <span class="row-number">Row {row.rowNumber}</span>
+            <span class="row-actions">
+              <Button variant="quiet" {disabled} aria-label="Edit row {row.rowNumber}" onclick={() => editRow(row.rowNumber)}>Edit</Button>
+              <Button variant="quiet" tone="danger" {disabled} aria-label="Delete row {row.rowNumber}" onclick={() => deleteRow(row.rowNumber)}>Delete</Button>
+            </span>
+          </div>
+          <dl>
+            {#each columns as column (column)}
+              <div class="pair">
+                <dt>{workspace.headers[column] || `Column ${columnLetter(column)}`}</dt>
+                <dd class={{ blank: !row.cells[column] }}>{row.cells[column] || "—"}</dd>
+              </div>
+            {/each}
+          </dl>
+        </li>
+      {/each}
+    </ol>
+  {:else}
+    <div class="wrap">
       <table>
+        <colgroup>
+          <col class="number-col" />
+          {#each columns as column (column)}<col />{/each}
+          <col class="actions-col" />
+        </colgroup>
         <thead>
           <tr>
             <th class="number" scope="col">#</th>
@@ -104,13 +146,8 @@
           {/each}
         </tbody>
       </table>
-      {#if !dataRows.length}
-        <p class="empty-note">No data rows yet. Scan a barcode or add a row.</p>
-      {/if}
-    {:else}
-      <p class="empty-note">Column headings and rows will appear here.</p>
-    {/if}
-  </div>
+    </div>
+  {/if}
 </section>
 
 <style>
@@ -133,30 +170,58 @@
     color: var(--ink-muted);
   }
 
-  /* The table keeps a light paper look in both themes for legibility. */
-  .wrap {
+  .count {
+    margin-left: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-muted);
+  }
+
+  .empty {
+    margin: 0;
+    padding: 20px;
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius);
+    font-size: 14px;
+    color: var(--ink-muted);
+  }
+
+  /* Rows keep a light paper look in both themes for legibility. */
+  .wrap,
+  .card {
     --link: #892331;
     --danger: #a3222c;
     --focus-ring: #851c30;
-    max-height: 500px;
-    overflow: auto;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--table-bg);
     color: var(--table-ink);
   }
 
+  .wrap {
+    max-height: min(70vh, 640px);
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  /* Columns share the width and long values wrap, so the table never runs off the side. */
   table {
-    min-width: 100%;
-    width: max-content;
+    width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
     font-size: 14px;
   }
 
+  .number-col {
+    width: 52px;
+  }
+
+  .actions-col {
+    width: 136px;
+  }
+
   th,
   td {
-    min-width: 130px;
-    max-width: 300px;
     padding: 10px 14px;
     border-right: 1px solid var(--table-line);
     border-bottom: 1px solid var(--table-line);
@@ -206,15 +271,12 @@
   }
 
   .number {
-    width: 52px;
-    min-width: 52px;
     font-family: var(--font-mono);
     font-weight: 400;
     color: var(--table-muted);
   }
 
   .row-actions {
-    min-width: 128px;
     white-space: nowrap;
   }
 
@@ -222,8 +284,65 @@
     margin-left: 14px;
   }
 
-  .empty-note {
-    padding: 18px;
+  /* One card per line on phones; side by side when a wide sheet is shown as cards on a big screen. */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+    align-items: start;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .card {
+    padding: 4px 14px 10px;
+  }
+
+  .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid var(--table-line);
+  }
+
+  .row-number {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--table-muted);
+  }
+
+  dl {
+    margin: 0;
+  }
+
+  .pair {
+    display: grid;
+    grid-template-columns: minmax(84px, 36%) minmax(0, 1fr);
+    gap: 12px;
+    padding: 7px 0;
+    font-size: 14px;
+  }
+
+  .pair + .pair {
+    border-top: 1px solid var(--table-line);
+  }
+
+  dt {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--table-muted);
+    overflow-wrap: anywhere;
+  }
+
+  dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+  }
+
+  dd.blank {
     color: var(--table-muted);
   }
 

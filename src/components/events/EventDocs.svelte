@@ -131,11 +131,12 @@
 {/if}
 
 <style>
+  /* Side by side when there's room, stacked full width on phones. */
   .create {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
     align-items: center;
-    gap: 10px 14px;
+    gap: 10px;
     margin-bottom: 18px;
   }
 

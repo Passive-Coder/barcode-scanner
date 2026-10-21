@@ -2,7 +2,6 @@
   import { enter } from "$lib/motion.js";
   import { account } from "$lib/stores/account.svelte.js";
   import { mobileNav } from "$lib/stores/layout.svelte.js";
-  import { teams } from "$lib/stores/teams.svelte.js";
   import TeamDetail from "../../components/teams/TeamDetail.svelte";
   import SessionBanner from "../../components/ui/SessionBanner.svelte";
   import SignInPrompt from "../../components/ui/SignInPrompt.svelte";
@@ -12,7 +11,7 @@
 </script>
 
 <div class="screen" {@attach enter({ y: 12, duration: 0.4 })}>
-  <MobileBar title={teams.detail?.team.name ?? "Team"} subtitle="Team" backLabel="Back to teams" onback={back} />
+  <MobileBar title="Team" backLabel="Back to teams" onback={back} />
   <SessionBanner />
   {#if account.ready}
     <TeamDetail onclosed={back} />
@@ -33,6 +32,6 @@
   }
 
   .screen :global(article h2) {
-    font-size: 20px;
+    font-size: 22px;
   }
 </style>

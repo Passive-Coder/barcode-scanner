@@ -12,8 +12,8 @@
 <header class="bar">
   {#if onback}<BackButton label={backLabel} onclick={onback} />{/if}
   <div class="titles">
-    <h1 {id}>{title}</h1>
-    {#if subtitle}<span>{subtitle}</span>{/if}
+    <h1 {id} title={title}>{title}</h1>
+    {#if subtitle}<span title={subtitle}>{subtitle}</span>{/if}
   </div>
 </header>
 
@@ -27,8 +27,8 @@
     align-items: center;
     gap: 12px;
     margin: 0 -20px 20px;
-    /* Room on the right for the pinned logo (46px) and a gap. */
-    padding: var(--safe-top) 78px 0 20px;
+    /* Room on the right for the pinned logo (46px) and a gap, and below a title that wraps. */
+    padding: var(--safe-top) 78px 6px 20px;
     border-bottom: 1px solid var(--line);
     background: var(--bg);
   }
@@ -40,19 +40,28 @@
     flex-direction: column;
   }
 
-  h1 {
+  /* Long titles wrap onto a second line rather than running off the bar. */
+  h1,
+  span {
+    display: -webkit-box;
     overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow-wrap: anywhere;
+  }
+
+  h1 {
     font-size: 19px;
     font-weight: 650;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 1.2;
   }
 
   span {
-    overflow: hidden;
+    margin-top: 2px;
     font-size: 13px;
     color: var(--ink-muted);
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
   }
 </style>
