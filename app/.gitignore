@@ -1,0 +1,24 @@
+# Expo
+.expo/
+dist/
+dist-check/
+dist-web-check/
+web-build/
+expo-env.d.ts
+
+# Native projects are generated from app.config.js (npx expo prebuild); don't commit them.
+ios/
+android/
+
+# Signing keys and credentials
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.keystore
+google-services.json
+GoogleService-Info.plist
+
+# Metro
+.metro-health-check*

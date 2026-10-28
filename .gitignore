@@ -12,3 +12,7 @@ dist/
 # Local Worker secrets (VAPID private key and friends).
 .dev.vars
 .dev.vars.*
+
+# Local tool and editor files.
+.codex/
+.vscode/
